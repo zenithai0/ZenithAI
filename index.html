@@ -754,7 +754,19 @@
     </div>
 
     <script>
-        const firebaseConfig = { databaseURL: "https://zenithai-934b7-default-rtdb.firebaseio.com/" };
+        // ==============================================================================
+        // 🚀 CRITICAL UPDATE: COUPLING TO YOUR NEW FIREBASE DB INSTANCE
+        // ==============================================================================
+        const firebaseConfig = { 
+            apiKey: "YOUR_NEW_API_KEY",
+            authDomain: "YOUR_NEW_AUTH_DOMAIN",
+            databaseURL: "https://zenithai-934b7-default-rtdb.firebaseio.com/",
+            projectId: "YOUR_NEW_PROJECT_ID",
+            storageBucket: "YOUR_NEW_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_NEW_MESSAGING_SENDER_ID",
+            appId: "YOUR_NEW_APP_ID"
+        };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
@@ -1096,9 +1108,6 @@
         function openAiLogicModal(t, r) { document.getElementById('logic-modal').style.display = 'flex'; document.getElementById('tech-logic-field').innerText = t; document.getElementById('risk-logic-field').innerText = r; }
         function closeAiLogicModal() { document.getElementById('logic-modal').style.display = 'none'; }
 
-        // ==============================================================================
-        // 🚀 FIX CRITICAL SECURITY EXCLUSION FOR ADMIN BLOCK DEVIATION SYNC
-        // ==============================================================================
         function initCoreListeners() {
             db.ref('global_stats').on('value', (snap) => {
                 const s = snap.val() || { total_trades: 0, total_tp: 0 };
@@ -1106,7 +1115,6 @@
                 document.getElementById('global-win-rate').innerText = s.total_trades > 0 ? ((s.total_tp / s.total_trades)*100).toFixed(0) + "%" : "0%";
             });
 
-            // 🎯 CRITICAL RE-BALANCED PROJECTION Matrix Core (Admin හෝ User ඕනෑම කෙනෙක් ලොග් වුණාම Live Update වීම)
             setTimeout(() => {
                 if (!activeUserKey) return;
                 const pathRef = (activeUserKey === "pehelitha") ? 'premium_keys/pehelitha' : `premium_keys/${activeUserKey}`;
@@ -1139,7 +1147,6 @@
             showUiNotification(`Placing Auto-Execution Frame for ${coinKey}`, "success"); 
             if (!activeUserKey || !currentSignalData[coinKey]) return;
 
-            // 💥 TRIGGER API REALTIME SIMULATION FOR USER CLICKS TOO
             db.ref('trade_requests').push({
                 user_key: activeUserKey,
                 coin: coinKey.replace('/', ''),

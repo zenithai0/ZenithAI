@@ -780,409 +780,172 @@
         </div>
     </div>
 
-    <script>
-        // ==============================================================================
-        // 🚀 CRITICAL UPDATE: COUPLING TO YOUR NEW FIREBASE DB INSTANCE
-        // ==============================================================================
-        const firebaseConfig = { 
-            apiKey: "YOUR_NEW_API_KEY",
-            authDomain: "YOUR_NEW_AUTH_DOMAIN",
-            databaseURL: "https://zenithai-934b7-default-rtdb.firebaseio.com/",
-            projectId: "YOUR_NEW_PROJECT_ID",
-            storageBucket: "YOUR_NEW_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_NEW_MESSAGING_SENDER_ID",
-            appId: "YOUR_NEW_APP_ID"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        
-        let currentSignalData = null;
-        let activeUserKey = null;
-        let activeChart = null;
-        let isVoiceAssistEnabled = true;
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        function showUiNotification(message, type = "info") {
-            const container = document.getElementById('ui-notification-container');
-            const toast = document.createElement('div');
-            toast.className = `ui-toast ${type}`;
-            
-            let icon = '<i class="fas fa-info-circle" style="color:var(--primary)"></i>';
-            if(type === "success") icon = '<i class="fas fa-check-circle" style="color:var(--long)"></i>';
-            if(type === "error") icon = '<i class="fas fa-exclamation-triangle" style="color:var(--short)"></i>';
+<script>
+    const API_URL = "http://localhost:8000";
+    const WS_URL = "ws://localhost:8000/ws/live-matrix";
+    let pnlChart = null;
 
-            toast.innerHTML = `${icon} <span>${message}</span>`;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.animation = "slideDown 0.3s ease reverse forwards";
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        function triggerAIVoiceBroadcast(textMessage) {
-            if (!isVoiceAssistEnabled) return;
-            try {
-                window.speechSynthesis.cancel();
-                const speech = new SpeechSynthesisUtterance(textMessage);
-                speech.lang = 'en-US';
-                speech.rate = 0.88; 
-                speech.pitch = 0.85; 
-                window.speechSynthesis.speak(speech);
-            } catch (e) { console.log("Voice Engine Muted: ", e); }
-        }
-
-        function toggleVoiceAssist() {
-            isVoiceAssistEnabled = !isVoiceAssistEnabled;
-            const btn = document.getElementById('voice-toggle-btn');
-            if (isVoiceAssistEnabled) {
-                btn.innerHTML = `<i class="fas fa-volume-up"></i> VOICE: ON`;
-                btn.style.borderColor = "var(--accent)";
-                btn.style.color = "var(--accent)";
-                showUiNotification("AI Voice Assistant Activated.", "success");
-            } else {
-                btn.innerHTML = `<i class="fas fa-volume-mute"></i> VOICE: OFF`;
-                btn.style.borderColor = "var(--text-muted)";
-                btn.style.color = "var(--text-muted)";
-                showUiNotification("AI Voice Assistant Deactivated.", "info");
-            }
-        }
-
-        function initHeartbeatPulse() {
-            const canvas = document.getElementById('heartbeat-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            let x = 0;
-            
-            ctx.strokeStyle = '#ff007f';
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = '#ff007f';
-
-            function draw() {
-                if (x > canvas.width) {
-                    x = 0;
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 1. Initialize Chart.js for Win/Loss & PnL Visuals
+    function initChart() {
+        const ctx = document.getElementById('pnlChart').getContext('2d');
+        pnlChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Wins', 'Losses'],
+                datasets: [{
+                    data: [0, 0],
+                    backgroundColor: ['#10b981', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
                 }
-                ctx.beginPath();
-                ctx.moveTo(x, canvas.height / 2);
-                x += 2;
-                let y = canvas.height / 2;
-                if (x % 40 === 0) { y -= 15; } 
-                else if (x % 40 === 4) { y += 15; } 
-                else if (x % 40 === 8) { y = canvas.height / 2; }
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                requestAnimationFrame(draw);
             }
-            draw();
-        }
+        });
+    }
 
-        function verifyFirebaseKey() {
-            const inputKey = document.getElementById('access-key').value.trim();
-            if(!inputKey) return;
+    // 2. Fetch History Data from PostgreSQL via FastAPI & Update Real Stats
+    async function updateRealStatistics() {
+        try {
+            const response = await fetch(`${API_URL}/api/trades/history`);
+            const trades = await response.json();
+
+            let totalTrades = trades.length;
+            let wins = 0;
+            let losses = 0;
+            let totalPnL = 0.0;
+            let historyHTML = "";
+
+            trades.forEach(t => {
+                let pnlVal = parseFloat(t.pnl) || 0;
+                totalPnL += pnlVal;
+                
+                if (t.result === "WIN") wins++;
+                if (t.result === "LOSS") losses++;
+
+                let resClass = t.result === "WIN" ? "win-text" : "loss-text"; // ඔයාගේ CSS පන්ති මෙතනට දාන්න
+                historyHTML += `
+                    <div class="replay-row">
+                        <span>${new Date(t.timestamp).toLocaleTimeString()}</span>
+                        <span><b>${t.coin}</b></span>
+                        <span class="${t.side === 'LONG' ? 'win-text' : 'loss-text'}">${t.side}</span>
+                        <span>$${parseFloat(t.entry_price).toFixed(2)}</span>
+                        <span>$${parseFloat(t.hit_price).toFixed(2)}</span>
+                        <span class="${resClass}">$${pnlVal.toFixed(2)} (${t.result})</span>
+                    </div>
+                `;
+            });
+
+            // UI Elements Update (UI එකේ පරණ ID වෙනුවට මේවා සම්බන්ධ වේ)
+            if(document.getElementById("globalTrades")) document.getElementById("globalTrades").innerText = totalTrades;
+            if(document.getElementById("wlRatio")) document.getElementById("wlRatio").innerText = `${wins} / ${losses}`;
             
-            if(inputKey.toLowerCase() === "pehelitha") {
-                activeUserKey = "pehelitha";
-                document.getElementById('login-screen').style.display = 'none';
-                showDashboard({ expire_date: "LIFETIME" }, true, "P");
-                showUiNotification("ZenithAI Matrix Initialized. Welcome Admin.", "success");
-                triggerAIVoiceBroadcast("Access granted. Welcome to Zenith A I institutional command center pehelitha.");
-                return;
+            let winPercentage = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
+            if(document.getElementById("globalWinRate")) document.getElementById("globalWinRate").innerText = `${winPercentage}%`;
+            
+            // P&L Ratio Card update
+            if(document.getElementById("pnlRatio")) {
+                document.getElementById("pnlRatio").innerText = `$${totalPnL.toFixed(2)}`;
+                document.getElementById("pnlRatio").style.color = totalPnL >= 0 ? "#10b981" : "#ef4444";
             }
 
-            db.ref('premium_keys/' + inputKey).once('value', (s) => {
-                const userData = s.val();
-                if (userData && userData.status === "active") {
-                    activeUserKey = inputKey;
-                    document.getElementById('login-screen').style.display = 'none';
-                    if (userData.setup_completed) {
-                        const displayName = userData.nickname || inputKey;
-                        const initial = displayName.charAt(0).toUpperCase();
-                        showDashboard(userData, false, initial, displayName);
-                        showUiNotification(`Access Granted. Welcome to ZenithAI, ${displayName}!`, "success");
-                        triggerAIVoiceBroadcast(`Access granted. Welcome back ${displayName}.`);
-                    } else {
-                        document.getElementById('setup-screen').style.display = 'flex';
-                    }
-                } else {
-                    document.getElementById('error-msg').style.display = 'block';
-                    showUiNotification("Access Denied", "error");
-                }
-            });
-        }
-
-        function saveUserSetup() {
-            const nickname = document.getElementById('setup-nickname').value.trim();
-            const waNumber = document.getElementById('setup-wa').value.trim();
-            const apiKey = document.getElementById('setup-api-key').value.trim();
-            const apiSecret = document.getElementById('setup-api-secret').value.trim();
-            if(!waNumber || !apiKey || !apiSecret) {
-                document.getElementById('setup-error-msg').style.display = "block";
-                return;
+            // 🎥 Trade Replay Section Active Update
+            if(document.getElementById("tradeReplayContainer")) {
+                document.getElementById("tradeReplayContainer").innerHTML = historyHTML || "<p>No historical flips recorded.</p>";
             }
-            const btn = document.getElementById('setup-btn');
-            btn.innerText = "SAVING..."; btn.disabled = true;
 
-            db.ref('premium_keys/' + activeUserKey).update({
-                nickname: nickname, whatsapp_number: waNumber,
-                binance_api: apiKey, binance_secret: apiSecret,
-                setup_completed: true, vip_auto_trade: false
-            }).then(() => {
-                document.getElementById('setup-screen').style.display = 'none';
-                db.ref('premium_keys/' + activeUserKey).once('value', (snap) => {
-                    const userData = snap.val();
-                    showDashboard(userData, false, (userData.nickname || activeUserKey).charAt(0).toUpperCase(), userData.nickname);
-                });
-            });
-        }
-
-        function showDashboard(userData, isAdmin, initial, displayName = "") {
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('user-badge').style.display = 'flex';
-            document.getElementById('user-initial').innerText = initial;
-            if (isAdmin) {
-                document.getElementById('user-welcome-text').innerText = `ADMIN`;
-                document.getElementById('user-expiry-text').innerText = `LIFETIME ACCESS`;
-                document.getElementById('admin-btn').style.display = 'block';
-            } else {
-                document.getElementById('user-welcome-text').innerText = displayName.toUpperCase();
-                document.getElementById('user-expiry-text').innerText = `EXP: ${userData.expire_date || 'N/A'}`;
+            // Update Chart Data
+            if (pnlChart) {
+                pnlChart.data.datasets[0].data = [wins, losses];
+                pnlChart.update();
             }
-            initCoreListeners();
-            initHeartbeatPulse(); 
-            initWhaleTracker(); 
-        }
 
-        function initWhaleTracker() {
-            db.ref('whale_tracker').limitToLast(1).on('value', (snap) => {
-                if(!snap.exists()) return;
-                snap.forEach((childSnap) => {
-                    const data = childSnap.val();
-                    if(!data) return;
-                    const whaleContainer = document.getElementById('whale-data');
-                    const card = document.getElementById('mod-whale');
-                    const actionColor = data.side === "BUY" ? "var(--long)" : "var(--short)";
+        } catch (error) {
+            console.error("Error syncing statistics from Postgres:", error);
+        }
+    }
+
+    // 3. WebSocket Realtime Engine (Smart Money Signals & Whale Inflows Update)
+    function connectToLiveMatrix() {
+        const ws = new WebSocket(WS_URL);
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            const activeTrades = data.active_trades;
+            const systemHalted = data.system_halted;
+            
+            // Drawdown / System Halted Alert
+            if(systemHalted && document.getElementById("systemStatus")) {
+                document.getElementById("systemStatus").innerText = "HALTED (DRAWDOWN)";
+                document.getElementById("systemStatus").style.color = "#ef4444";
+            }
+
+            let signalsHTML = "";
+
+            if (activeTrades && Object.keys(activeTrades).length > 0) {
+                for (let key in activeTrades) {
+                    let sig = activeTrades[key];
+                    let sideColor = sig.side === "LONG" ? "#10b981" : "#ef4444";
                     
-                    whaleContainer.innerHTML = `<span style="color:${actionColor};">${data.side}</span> ${data.coin.replace('/USDT', '')} <br/> <span style="font-size:16px;">${data.value}</span>`;
-                    card.style.borderColor = actionColor;
-                    triggerAIVoiceBroadcast("Alert. Large whale inflow detected.");
-                    setTimeout(() => { card.style.borderColor = "rgba(221, 0, 255, 0.2)"; }, 1000);
-                });
-            });
-        }
-
-        function openTradeReplay() {
-            document.getElementById('replay-modal').style.display = 'flex';
-            db.ref('trade_history').limitToLast(20).once('value', (snap) => {
-                const container = document.getElementById('replay-logs-container');
-                container.innerHTML = ''; const data = snap.val();
-                if (!data) {
-                    container.innerHTML = `<p style="color:var(--text-muted); text-align:center;">No completed trade frames available.</p>`;
-                    return;
-                }
-                Object.values(data).reverse().forEach((trade, index) => {
-                    const statusColor = trade.result === "WIN" ? "var(--long)" : "var(--short)";
-                    container.innerHTML += `
-                        <div class="admin-trade-row" style="border-left-color: ${statusColor}; margin-bottom:15px; background:rgba(0,0,0,0.4);">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                <span style="color:#fff; font-weight:bold; font-size:15px;">🎬 REPLAY FRAME #${index+1}: ${trade.coin}</span>
-                                <button class="btn-mini" style="border-color:${statusColor}; color:${statusColor};" onclick="simulateFramePlayback('${trade.coin}', '${trade.side}', '${trade.entry}', '${trade.hit_price}', '${trade.result}')">Play Replay</button>
+                    // 🟢 UI එකේ තියෙන Signal Card එකේ හැඩයටම මෙතන වෙනස් කරන්න
+                    signalsHTML += `
+                        <div class="signal-card">
+                            <div class="card-header">
+                                <h3>${sig.pair}</h3>
+                                <span style="color: ${sideColor}; font-weight: bold;">${sig.side}</span>
                             </div>
-                        </div>`;
-                });
-            });
-        }
-
-        function simulateFramePlayback(coin, side, entry, hitPrice, result) {
-            closeTradeReplay();
-            openLiveChart(coin.replace('USDT', '/USDT'), entry, side==="LONG"? entry*1.05: entry*0.95, side==="LONG"? entry*0.95: entry*1.05, side);
-        }
-
-        function closeTradeReplay() { document.getElementById('replay-modal').style.display = 'none'; }
-        function openStrategyBuilder() { document.getElementById('strategy-modal').style.display = 'flex'; }
-        function closeStrategyBuilder() { document.getElementById('strategy-modal').style.display = 'none'; }
-        function openPsychologyDash() { document.getElementById('psychology-modal').style.display = 'flex'; }
-        function closePsychologyDash() { document.getElementById('psychology-modal').style.display = 'none'; }
-
-        function openAccountSettings() {
-            if(activeUserKey === 'pehelitha') { return; }
-            document.getElementById('account-modal').style.display = 'flex';
-            db.ref('premium_keys/' + activeUserKey).once('value', (s) => {
-                const data = s.val();
-                document.getElementById('edit-nickname').value = data.nickname || '';
-                document.getElementById('edit-wa').value = data.whatsapp_number || '';
-                document.getElementById('edit-api-key').value = data.binance_api || '';
-                document.getElementById('edit-api-secret').value = data.binance_secret || '';
-                document.getElementById('edit-vip-auto').checked = data.vip_auto_trade === true;
-            });
-        }
-
-        function closeAccountSettings() { document.getElementById('account-modal').style.display = 'none'; }
-
-        function saveAccountSettings() {
-            db.ref('premium_keys/' + activeUserKey).update({
-                nickname: document.getElementById('edit-nickname').value.trim(),
-                whatsapp_number: document.getElementById('edit-wa').value.trim(),
-                binance_api: document.getElementById('edit-api-key').value.trim(),
-                binance_secret: document.getElementById('edit-api-secret').value.trim(),
-                vip_auto_trade: document.getElementById('edit-vip-auto').checked
-            }).then(() => { closeAccountSettings(); });
-        }
-
-        function revealSignals() {
-            const btn = document.getElementById('scan-btn');
-            const sigContainer = document.getElementById('signal-container');
-            const placeholderGrid = document.getElementById('matrix-placeholder');
-            const statusDiv = document.getElementById('scanner-status');
-            
-            btn.innerHTML = `SCANNING...`; 
-            btn.disabled = true;
-            statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SEARCHING HIGH-CONFLUENCE LIQUIDITY NODES...</span>`;
-            
-            db.ref('live_signals').once('value').then((snap) => {
-                currentSignalData = snap.val();
-                placeholderGrid.style.display = 'none'; 
-                sigContainer.style.display = 'grid'; 
-                sigContainer.innerHTML = ''; 
-                
-                btn.innerHTML = `Scan Signals`;
-                btn.disabled = false;
-                statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
-
-                if (!currentSignalData) {
-                    sigContainer.innerHTML = '<div style="grid-column: span 2; text-align:center; color:var(--text-muted); padding:40px;">⚠️ Awaiting active HFT Quant Node cycles...</div>';
-                    return;
+                            <div class="card-body">
+                                <p>Entry: <b>${sig.entry}</b></p>
+                                <p>TP: <span style="color: #10b981;">${sig.tp1}</span> | SL: <span style="color: #ef4444;">${sig.sl}</span></p>
+                                <p>AI Probability: <b>${sig.accuracy}%</b></p>
+                            </div>
+                            <div class="card-footer">
+                                <button class="action-btn" onclick="executeManualMirror('${key}')">Mirror Trade</button>
+                            </div>
+                        </div>
+                    `;
                 }
+                if(document.getElementById("liveSignalsContainer")) {
+                    document.getElementById("liveSignalsContainer").innerHTML = signalsHTML;
+                }
+            } else {
+                if(document.getElementById("liveSignalsContainer")) {
+                    document.getElementById("liveSignalsContainer").innerHTML = "<p>Scanning Matrix for Smart Money Order Blocks...</p>";
+                }
+            }
 
-                const signalsArray = Object.entries(currentSignalData).slice(0, 6);
-                
-                signalsArray.forEach(([coinKey, details], index) => {
-                    setTimeout(() => {
-                        let safeSignalType = details.signal_type || "SCALPCORE";
-                        let sideClass = details.side === "LONG" ? "side-long" : "side-short";
-                        const isPremiumAlert = details.accuracy >= 85;
-                        const cardCssClass = isPremiumAlert ? "signal-card neon-gold-card" : "signal-card";
-                        
-                        const formattedTech = (details.tech_logic || "").replace(/'/g, "\\'");
-                        const formattedRisk = (details.risk_logic || "").replace(/'/g, "\\'");
-                        const pairName = details.pair || coinKey;
-                        const cardId = `sig-card-${index}`;
+            // 🐋 Whale Inflows Simulation / Logic update
+            if(document.getElementById("whaleInflows")) {
+                let fakeInflow = (Math.random() * 5 + 1).toFixed(2);
+                document.getElementById("whaleInflows").innerText = `+$${fakeInflow}M Vol`;
+            }
 
-                        sigContainer.innerHTML += `
-                            <div class="${cardCssClass} scanning-effect" id="${cardId}">
-                                <div>
-                                    <div class="coin-title">
-                                        <span>${pairName}</span>
-                                        <span class="${sideClass}">${details.side}</span>
-                                    </div>
-                                    <div class="data-row"><span class="data-label">Type</span><span class="data-value">${safeSignalType}</span></div>
-                                    <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value" style="font-weight:bold;">${details.entry}</span></div>
-                                    <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long); font-weight:bold;">${details.tp1}</span></div>
-                                    <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short); font-weight:bold;">${details.sl}</span></div>
-                                </div>
-                                <div class="card-actions">
-                                    <button class="btn-trade" onclick="takeTrade('${coinKey}')">AUTO-TRADE API</button>
-                                    <button class="btn-mini" onclick="openLiveChart('${pairName}', ${details.entry}, ${details.tp1}, ${details.sl}, '${details.side}')"><i class="fas fa-chart-line"></i> Live Market</button>
-                                    <button class="btn-mini" onclick="openAiLogicModal('${formattedTech}', '${formattedRisk}')"><i class="fas fa-brain"></i> Logic</button>
-                                </div>
-                            </div>`;
+            // 🔥 Liquidity Map update
+            if(document.getElementById("liquidityStatus") && data.liquidity_map) {
+                document.getElementById("liquidityStatus").innerText = `High: $${data.liquidity_map.high_zone} | Low: $${data.liquidity_map.low_zone}`;
+            }
+        };
 
-                        setTimeout(() => {
-                            const element = document.getElementById(cardId);
-                            if(element) {
-                                element.classList.add('reveal-active');
-                                setTimeout(() => element.classList.remove('scanning-effect'), 1500);
-                            }
-                        }, 50);
+        ws.onclose = function() {
+            console.log("Matrix disconnected. Reconnecting backend in 3s...");
+            setTimeout(connectToLiveMatrix, 3000);
+        };
+    }
 
-                        triggerAIVoiceBroadcast(`Signal verified for ${pairName}. Position. ${details.side}. Accuracy score. ${details.accuracy} percent.`);
-
-                    }, index * 10000); 
-                });
-            });
-        }
-
-        function openLiveChart(pair, entry, tp, sl, side) {
-            document.getElementById('chart-modal').style.display = 'flex';
-            document.getElementById('chart-coin-name').innerText = pair;
-            document.getElementById('chart-side').innerText = `MATRIX ${side}`;
-            
-            const chartDiv = document.getElementById('tv-chart'); chartDiv.innerHTML = '';
-            
-            activeChart = LightweightCharts.createChart(chartDiv, { 
-                width: chartDiv.clientWidth, 
-                height: 420, 
-                layout: { background: { type: 'solid', color: '#090206' }, textColor: '#f8fafc' },
-                grid: { vertLines: { color: 'rgba(255, 0, 127, 0.05)' }, horzLines: { color: 'rgba(255, 0, 127, 0.05)' } }
-            });
-            
-            const candlestickSeries = activeChart.addSeries(LightweightCharts.CandlestickSeries, {
-                upColor: '#00f0ff', downColor: '#ff007f', borderVisible: false, wickUpColor: '#00f0ff', wickDownColor: '#ff007f'
-            });
-            
-            fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${pair.replace('/','')}&interval=15m&limit=150`)
-                .then(res => res.json()).then(data => {
-                    candlestickSeries.setData(data.map(d => ({ time: d[0]/1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4]) })));
-                    
-                    candlestickSeries.createPriceLine({ price: parseFloat(entry), color: '#f7931a', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, title: 'ENTRY' });
-                    candlestickSeries.createPriceLine({ price: parseFloat(tp), color: '#00ffaa', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Solid, title: 'TAKE PROFIT' });
-                    candlestickSeries.createPriceLine({ price: parseFloat(sl), color: '#ff1744', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Solid, title: 'STOP LOSS' });
-                });
-        }
-
-        function closeLiveChart() { document.getElementById('chart-modal').style.display = 'none'; if(activeChart) activeChart.remove(); }
-        function openAiLogicModal(t, r) { document.getElementById('logic-modal').style.display = 'flex'; document.getElementById('tech-logic-field').innerText = t; document.getElementById('risk-logic-field').innerText = r; }
-        function closeAiLogicModal() { document.getElementById('logic-modal').style.display = 'none'; }
-
-        function initCoreListeners() {
-            db.ref('global_stats').on('value', (snap) => {
-                const s = snap.val() || { total_trades: 0, total_tp: 0 };
-                document.getElementById('global-total-trades').innerText = s.total_trades;
-                document.getElementById('global-win-rate').innerText = s.total_trades > 0 ? ((s.total_tp / s.total_trades)*100).toFixed(0) + "%" : "0%";
-            });
-
-            setTimeout(() => {
-                if (!activeUserKey) return;
-                const pathRef = (activeUserKey === "pehelitha") ? 'premium_keys/pehelitha' : `premium_keys/${activeUserKey}`;
-                
-                db.ref(pathRef).on('value', (snapshot) => {
-                    if (!snapshot.exists()) return;
-                    const userData = snapshot.val();
-                    const myStats = userData.stats || { trades: 0, tp: 0, sl: 0 };
-                    
-                    let tpCount = Number(myStats.tp) || 0;
-                    let slCount = Number(myStats.sl) || 0;
-
-                    document.getElementById('user-trades').innerText = myStats.trades || 0;
-                    document.getElementById('user-pnl-ratio').innerText = `${tpCount}/${slCount}`;
-                    
-                    const pnlBarsContainer = document.getElementById('pnl-visual-bars');
-                    if(pnlBarsContainer) {
-                        pnlBarsContainer.innerHTML = '';
-                        for(let i=0; i<tpCount && i<5; i++) { pnlBarsContainer.innerHTML += '<div class="pnl-bar fill-tp" style="height:80%"></div>'; }
-                        for(let i=0; i<slCount && i<5; i++) { pnlBarsContainer.innerHTML += '<div class="pnl-bar fill-sl" style="height:50%"></div>'; }
-                        if(tpCount === 0 && slCount === 0) {
-                            pnlBarsContainer.innerHTML = '<div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div>';
-                        }
-                    }
-                });
-            }, 1000);
-        }
-
-        function takeTrade(coinKey) { 
-            showUiNotification(`Placing Auto-Execution Frame for ${coinKey}`, "success"); 
-            if (!activeUserKey || !currentSignalData[coinKey]) return;
-
-            db.ref('trade_requests').push({
-                user_key: activeUserKey,
-                coin: coinKey.replace('/', ''),
-                side: currentSignalData[coinKey].side,
-                status: 'pending',
-                timestamp: Date.now(),
-                type: 'MANUAL_CLICK'
-            });
-        }
-    </script>
+    // Page Initialization
+    window.onload = function() {
+        initChart();
+        updateRealStatistics();
+        connectToLiveMatrix();
+        
+        // පැය 24 පුරාම ඩේටා අප්ඩේට් එක තියාගන්න තත්පර 15න් 15ට History Fetch කරයි
+        setInterval(updateRealStatistics, 15000);
+    };
+</script>
 </body>
 </html>

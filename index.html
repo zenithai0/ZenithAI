@@ -403,7 +403,6 @@
         .logic-header { font-size: 24px; font-weight: 800; color: #fff; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; margin-bottom: 25px; font-family: 'Rajdhani', sans-serif;}
         .logic-content-block { background: rgba(0,0,0,0.6); border: 1px solid var(--card-border); padding: 18px; border-radius: 12px; font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 20px; white-space: pre-wrap; }
         
-        /* Hidden layout container specifically for Chart.js element */
         .chart-wrapper-hidden { display: none; }
     </style>
     
@@ -503,7 +502,7 @@
                     <i class="fas fa-volume-up"></i> VOICE: ON
                 </button>
 
-                <div class="user-profile" id="user-badge" style="display:none;" onclick="openAccountSettings()">
+                <div class="user-profile" id="user-badge" onclick="openAccountSettings()">
                     <div class="profile-info">
                         <div class="profile-name" id="user-welcome-text">USER</div>
                         <div class="profile-exp" id="user-expiry-text">EXP: N/A</div>
@@ -783,7 +782,7 @@
     const WS_URL = "ws://localhost:8000/ws/live-matrix";
     let pnlChart = null;
 
-    // 1. Initialize Chart.js for Win/Loss & PnL Visuals Safely
+    // 1. Initialize Chart.js safely inside the hidden canvas
     function initChart() {
         const chartCanvas = document.getElementById('pnlChart');
         if (!chartCanvas) return;
@@ -841,14 +840,14 @@
                 `;
             });
 
-            // Mapping endpoints directly to your exact requested fields
+            // Updating Cyberpunk Statistics Panel with live relational parameters
             if(document.getElementById("global-total-trades")) document.getElementById("global-total-trades").innerText = totalTrades;
             if(document.getElementById("user-trades")) document.getElementById("user-trades").innerText = totalTrades;
             
             let winPercentage = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
             if(document.getElementById("global-win-rate")) document.getElementById("global-win-rate").innerText = `${winPercentage}%`;
             
-            // Dynamic adjustment of the stroke-dashoffset based on real win rate calculation
+            // Neon Glow win percentage ring logic sync mapping calculations
             const winArc = document.getElementById("win-rate-arc");
             if (winArc) {
                 let offsetValue = 100 - winPercentage;
@@ -860,12 +859,10 @@
                 document.getElementById("user-pnl-ratio").style.color = totalPnL >= 0 ? "var(--long)" : "var(--short)";
             }
 
-            // Real data sync to 🎥 Trade Replay Container natively
             if(document.getElementById("replay-logs-container")) {
                 document.getElementById("replay-logs-container").innerHTML = historyHTML || "<p style='color:var(--text-muted); padding:10px;'>No historical clips logged in PostgreSQL matrix.</p>";
             }
 
-            // Sync visual representation properties back into chart instance
             if (pnlChart) {
                 pnlChart.data.datasets[0].data = [wins, losses];
                 pnlChart.update();
@@ -896,7 +893,6 @@
             let signalsHTML = "";
 
             if (activeTrades && Object.keys(activeTrades).length > 0) {
-                // Remove fallback items placeholders when data feeds successfully
                 document.getElementById("matrix-placeholder").style.display = "none";
                 document.getElementById("signal-container").style.display = "grid";
 
@@ -904,7 +900,6 @@
                     let sig = activeTrades[key];
                     let sideClass = sig.side === "LONG" ? "side-long" : "side-short";
                     
-                    // Rendering directly keeping exact styling components structurally safe
                     signalsHTML += `
                         <div class="signal-card reveal-active">
                             <div class="coin-title">
@@ -943,13 +938,11 @@
                 document.getElementById("signal-container").style.display = "none";
             }
 
-            // 🐋 Whale Inflows loop synchronization
             if(document.getElementById("whale-data")) {
                 let dynamicVol = (Math.random() * 4 + 1).toFixed(2);
                 document.getElementById("whale-data").innerText = `+$${dynamicVol}M Vol`;
             }
 
-            // 🔥 Liquidity Map layout processing
             if(document.getElementById("liquidityStatus") && data.liquidity_map) {
                 document.getElementById("liquidityStatus").innerHTML = `HIGH: <span style="color:var(--short); font-weight:bold;">$${data.liquidity_map.high_zone}</span><br>LOW: <span style="color:var(--long); font-weight:bold;">$${data.liquidity_map.low_zone}</span>`;
             }
@@ -960,21 +953,19 @@
         };
     }
 
-    // 🔴 FIX: Missing required initializer execution verification logic added back clean
+    // Key Validation mapping entry logic
     function verifyFirebaseKey() {
         const keyInput = document.getElementById("access-key").value;
         if(keyInput || document.getElementById("dashboard").style.display === "none") {
-            // Native dashboard visibility shift automation rules
             document.getElementById("login-screen").style.display = "none";
             document.getElementById("dashboard").style.display = "block";
-            // Call chart framework resizing trigger automatically
             updateRealStatistics();
         } else {
             alert("🔒 Core Matrix Validation: Key Verification initialized.");
         }
     }
 
-    // Structural View Control triggers keeping native state untouched
+    // Modal Control wrappers
     function openStrategyBuilder() { document.getElementById("strategy-modal").style.display = "flex"; }
     function closeStrategyBuilder() { document.getElementById("strategy-modal").style.display = "none"; }
     function openPsychologyDash() { document.getElementById("psychology-modal").style.display = "flex"; }
@@ -991,11 +982,17 @@
     }
     function closeAiLogicModal() { document.getElementById("logic-modal").style.display = "none"; }
 
-    // Page Initialization rules loading data cleanly
+    // Page Initialization trigger mapping properties properly on load
     window.onload = function() {
         initChart();
         updateRealStatistics();
         connectToLiveMatrix();
+        
+        // 🔴 දකුණු පැත්තේ උඩ Profile Settings එක පේන්න මෙතන flex කරලා ලොක් කළා මචං
+        if(document.getElementById("user-badge")) {
+            document.getElementById("user-badge").style.display = "flex";
+        }
+        
         setInterval(updateRealStatistics, 15000);
     };
 </script>

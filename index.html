@@ -621,79 +621,74 @@
         }
 
         // Load Real Statistics Directly From PostgreSQL Database Core
-       // 🔄 ඔයාගේ Script එක ඇතුළට මේ Function එක අලුතින්ම එකතු කරන්න මචං
-async function updateRealPostgresStatistics() {
-    try {
-        const response = await fetch("http://localhost:8000/api/trades/history");
-        const trades = await response.json();
+        async function updateRealPostgresStatistics() {
+            try {
+                const response = await fetch(`${API_URL}/api/trades/history`);
+                const trades = await response.json();
 
-        let totalTrades = trades.length;
-        let wins = 0; 
-        let losses = 0; 
-        let totalPnL = 0.0;
+                let totalTrades = trades.length;
+                let wins = 0; let losses = 0; let totalPnL = 0.0;
 
-        trades.forEach(t => {
-            totalPnL += parseFloat(t.pnl) || 0;
-            if (t.result === "WIN") wins++;
-            if (t.result === "LOSS") losses++;
-        });
+                trades.forEach(t => {
+                    totalPnL += parseFloat(t.pnl) || 0;
+                    if (t.result === "WIN") wins++;
+                    if (t.result === "LOSS") losses++;
+                });
 
-        let winPercentage = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-        
-        // 0 පෙන්නන පරණ UI IDs ටික ලයිව් දත්ත වලින් අප්ඩේට් කිරීම
-        if(document.getElementById('global-total-trades')) document.getElementById('global-total-trades').innerText = totalTrades;
-        if(document.getElementById('user-trades')) document.getElementById('user-trades').innerText = `${wins} W / ${losses} L`;
-        if(document.getElementById('global-win-rate')) document.getElementById('global-win-rate').innerText = `${winPercentage}%`;
-        
-        // රවුම් චාට් එකේ නිවැරදි win rate එක පෙන්වීම
-        const winArc = document.getElementById("win-rate-arc");
-        if(winArc) winArc.style.strokeDashoffset = 100 - winPercentage;
+                let winPercentage = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
+                
+                // Real mapping arrays updates securely
+                if(document.getElementById('global-total-trades')) document.getElementById('global-total-trades').innerText = totalTrades;
+                if(document.getElementById('user-trades')) document.getElementById('user-trades').innerText = `${wins} W / ${losses} L`;
+                if(document.getElementById('global-win-rate')) document.getElementById('global-win-rate').innerText = `${winPercentage}%`;
+                
+                const winArc = document.getElementById("win-rate-arc");
+                if(winArc) winArc.style.strokeDashoffset = 100 - winPercentage;
 
-        // P&L Ratio එක ලස්සනට පෙන්වීම
-        if(document.getElementById('user-pnl-ratio')) {
-            document.getElementById('user-pnl-ratio').innerText = `$${totalPnL.toFixed(2)}`;
-            document.getElementById('user-pnl-ratio').style.color = totalPnL >= 0 ? "var(--long)" : "var(--short)";
+                if(document.getElementById('user-pnl-ratio')) {
+                    document.getElementById('user-pnl-ratio').innerText = `$${totalPnL.toFixed(2)}`;
+                    document.getElementById('user-pnl-ratio').style.color = totalPnL >= 0 ? "var(--long)" : "var(--short)";
+                }
+
+                // Render real execution metrics to visual structural pnl elements
+                const pnlBars = document.getElementById('pnl-visual-bars');
+                if(pnlBars) {
+                    pnlBars.innerHTML = '';
+                    for(let i=0; i<wins && i<5; i++) pnlBars.innerHTML += '<div class="pnl-bar fill-tp" style="height:80%"></div>';
+                    for(let i=0; i<losses && i<5; i++) pnlBars.innerHTML += '<div class="pnl-bar fill-sl" style="height:50%"></div>';
+                }
+            } catch (e) { console.error("Database connection fault:", e); }
         }
-
-        // නිල් සහ රතු පාට ප්‍රොග්‍රෙස් බාර් (PnL Bars) ටික ලයිව් අප්ඩේට් කිරීම
-        const pnlBars = document.getElementById('pnl-visual-bars');
-        if(pnlBars) {
-            pnlBars.innerHTML = '';
-            for(let i=0; i<wins && i<5; i++) pnlBars.innerHTML += '<div class="pnl-bar fill-tp" style="height:80%"></div>';
-            for(let i=0; i<losses && i<5; i++) pnlBars.innerHTML += '<div class="pnl-bar fill-sl" style="height:50%"></div>';
-        }
-    } catch (e) { console.error("Database connection fault:", e); }
-}
 
         // Live Real-Time Trade Replay Frame Renderer (Synced with PostgreSQL logs)
-        // 🎥 පරණ openTradeReplay() function එක වෙනුවට මේක දාන්න මචං
-async function openTradeReplay() {
-    document.getElementById('replay-modal').style.display = 'flex';
-    try {
-        const response = await fetch("http://localhost:8000/api/trades/history");
-        const trades = await response.json();
-        const container = document.getElementById('replay-logs-container');
-        container.innerHTML = '';
+        async function openTradeReplay() {
+            document.getElementById('replay-modal').style.display = 'flex';
+            try {
+                const response = await fetch(`${API_URL}/api/trades/history`);
+                const trades = await response.json();
+                const container = document.getElementById('replay-logs-container');
+                container.innerHTML = '';
 
-        if (trades.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted); text-align:center;">No completed trade frames available.</p>`;
-            return;
+                if (trades.length === 0) {
+                    container.innerHTML = `<p style="color:var(--text-muted); text-align:center;">No completed trade frames recorded.</p>`;
+                    return;
+                }
+
+                trades.forEach((trade, index) => {
+                    const cl = trade.result === "WIN" ? "win-text" : "loss-text";
+                    container.innerHTML += `
+                        <div class="admin-trade-row" style="border-left: 4px solid ${trade.result==="WIN"?'var(--long)':'var(--short)'}; background:rgba(0,0,0,0.3); margin-bottom:8px; padding:12px; border-radius:8px;">
+                            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                                <span>🎬 FRAME #${index+1}: <b>${trade.coin}</b> (${trade.side})</span>
+                                <span>Entry: $${parseFloat(trade.entry_price).toFixed(2)}</span>
+                                <span class="${cl}">PnL: $${parseFloat(trade.pnl).toFixed(2)}</span>
+                                <button class="btn-mini" onclick="simulateFramePlayback('${trade.coin}', '${trade.side}', ${trade.entry_price}, ${trade.hit_price})">Play Replay</button>
+                            </div>
+                        </div>`;
+                });
+            } catch (e) { console.error(e); }
         }
 
-        trades.forEach((trade, index) => {
-            const cl = trade.result === "WIN" ? "win-text" : "loss-text";
-            container.innerHTML += `
-                <div class="admin-trade-row" style="border-left: 4px solid ${trade.result==="WIN"?'var(--long)':'var(--short)'}; background:rgba(0,0,0,0.3); margin-bottom:8px; padding:12px; border-radius:8px;">
-                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-                        <span>🎬 FRAME #${index+1}: <b>${trade.coin}</b> (${trade.side})</span>
-                        <span>Entry: $${parseFloat(trade.entry_price).toFixed(2)}</span>
-                        <span class="${cl}">PnL: $${parseFloat(trade.pnl).toFixed(2)}</span>
-                        <button class="btn-mini" onclick="simulateFramePlayback('${trade.coin}', '${trade.side}', ${trade.entry_price}, ${trade.hit_price})">Play Replay</button>
-                    </div>
-                </div>`;
-        });
-    } catch (e) { console.error(e); }
-}
         function simulateFramePlayback(coin, side, entry, hit) {
             closeTradeReplay();
             openLiveChart(coin.replace('USDT', '/USDT'), entry, side==="LONG"?entry*1.02:entry*0.98, side==="LONG"?entry*0.98:entry*1.02, side);
@@ -726,57 +721,52 @@ async function openTradeReplay() {
         }
 
         // Live Dynamic Scanners Mapping via WebSocket Channels Real-time
-        // 🛰️ ඔයාගේ පරණ revealSignals() function එක වෙනුවට මේක Edit කරලා දාන්න
-function revealSignals() {
-    const sigContainer = document.getElementById('signal-container');
-    const placeholderGrid = document.getElementById('matrix-placeholder');
-    const statusDiv = document.getElementById('scanner-status');
-    
-    statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SCANNING MULTI-MODEL ENSEMBLE AI TARGET NODES...</span>`;
-    
-    // FastAPI WebSocket එකට ලයිව් කනෙක්ට් වීම
-    const ws = new WebSocket("ws://localhost:8000/ws/live-matrix");
-    ws.onmessage = function(event) {
-        const matrixData = JSON.parse(event.data);
-        const activeTrades = matrixData.active_trades;
-        currentSignalData = activeTrades;
+        function revealSignals() {
+            const sigContainer = document.getElementById('signal-container');
+            const placeholderGrid = document.getElementById('matrix-placeholder');
+            const statusDiv = document.getElementById('scanner-status');
+            
+            statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SCANNING MULTI-MODEL ENSEMBLE AI TARGET NODES...</span>`;
+            
+            // Connect securely to WebSocket broadcast core array maps
+            const ws = new WebSocket("ws://localhost:8000/ws/live-matrix");
+            ws.onmessage = function(event) {
+                const matrixData = JSON.parse(event.data);
+                const activeTrades = matrixData.active_trades;
+                currentSignalData = activeTrades;
 
-        if (activeTrades && Object.keys(activeTrades).length > 0) {
-            placeholderGrid.style.display = 'none'; 
-            sigContainer.style.display = 'grid';
-            sigContainer.innerHTML = ''; 
-            statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
+                if (activeTrades && Object.keys(activeTrades).length > 0) {
+                    placeholderGrid.style.display = 'none'; sigContainer.style.display = 'grid';
+                    sigContainer.innerHTML = ''; statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
 
-            for (let key in activeTrades) {
-                let sig = activeTrades[key];
-                let sideClass = sig.side === "LONG" ? "side-long" : "side-short";
-                
-                // ඔයාගේ ඔරිජිනල් කාඩ් ස්ටයිල් එක ඒ විදිහටම අවුට්පුට් කිරීම
-                sigContainer.innerHTML += `
-                    <div class="signal-card reveal-active">
-                        <div class="coin-title">
-                            <span>${sig.pair}</span>
-                            <span class="${sideClass}">${sig.side}</span>
-                        </div>
-                        <div class="data-row"><span class="data-label">Strategy</span><span class="data-value">${sig.signal_type}</span></div>
-                        <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value">$${sig.entry}</span></div>
-                        <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long);">$${sig.tp1}</span></div>
-                        <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short);">$${sig.sl}</span></div>
-                        <div class="data-row"><span class="data-label">Stacking Score</span><span class="data-value" style="color:var(--accent); font-weight:800;">${sig.accuracy}%</span></div>
-                        <div class="card-actions">
-                            <button class="btn-trade" onclick="takeTrade('${key}')">AUTO-TRADE API</button>
-                            <button class="btn-mini" onclick="openLiveChart('${sig.pair}', ${sig.entry}, ${sig.tp1}, ${sig.sl}, '${sig.side}')">Live Market</button>
-                            <button class="btn-mini" onclick="openAiLogicModal('${sig.tech_logic}', 'Risk Matrix Cleared.')">Logic</button>
-                        </div>
-                    </div>`;
-            }
-        } else {
-            placeholderGrid.style.display = 'grid'; 
-            sigContainer.style.display = 'none';
-            statusDiv.innerHTML = `🟢 SCANNING FOR INSTITUTIONAL CONFLUENCE ZONE...`;
+                    for (let key in activeTrades) {
+                        let sig = activeTrades[key];
+                        let sideClass = sig.side === "LONG" ? "side-long" : "side-short";
+                        
+                        sigContainer.innerHTML += `
+                            <div class="signal-card reveal-active">
+                                <div class="coin-title">
+                                    <span>${sig.pair}</span>
+                                    <span class="${sideClass}">${sig.side}</span>
+                                </div>
+                                <div class="data-row"><span class="data-label">Strategy</span><span class="data-value">${sig.signal_type}</span></div>
+                                <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value">$${sig.entry}</span></div>
+                                <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long);">$${sig.tp1}</span></div>
+                                <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short);">$${sig.sl}</span></div>
+                                <div class="data-row"><span class="data-label">Stacking Score</span><span class="data-value" style="color:var(--accent); font-weight:800;">${sig.accuracy}%</span></div>
+                                <div class="card-actions">
+                                    <button class="btn-trade" onclick="takeTrade('${key}')">AUTO-TRADE API</button>
+                                    <button class="btn-mini" onclick="openLiveChart('${sig.pair}', ${sig.entry}, ${sig.tp1}, ${sig.sl}, '${sig.side}')">Live Market</button>
+                                    <button class="btn-mini" onclick="openAiLogicModal('${sig.tech_logic}', 'Risk Matrix Cleared.')">Logic</button>
+                                </div>
+                            </div>`;
+                    }
+                } else {
+                    placeholderGrid.style.display = 'grid'; sigContainer.style.display = 'none';
+                    statusDiv.innerHTML = `🟢 SCANNING FOR INSTITUTIONAL CONFLUENCE ZONE...`;
+                }
+            };
         }
-    };
-}
 
         // Whale Tracker Core Array Nodes Sync Mapping
         function initWhaleTracker() {
@@ -797,14 +787,8 @@ function revealSignals() {
             document.getElementById('user-welcome-text').innerText = displayName.toUpperCase();
             document.getElementById('user-expiry-text').innerText = `EXP: ${userData.expire_date}`;
             
-            // ⚙️ showDashboard function එක ඇතුළත අන්තිම ටිකට මේ රේඛාවන් එකතු කරන්න
-            initHeartbeatPulse(); 
-            initWhaleTracker(); 
-            revealSignals(); 
-            updateRealPostgresStatistics(); // පළවෙනි පාර දත්ත ලෝඩ් කිරීම
-
-            // තත්පර 15න් 15ට PostgreSQL දත්ත සජීවීව අප්ඩේට් කිරීම
-            setInterval(updateRealPostgresStatistics, 15000);
+            initHeartbeatPulse(); initWhaleTracker(); revealSignals(); updateRealPostgresStatistics();
+            setInterval(updateRealPostgresStatistics, 15000); // Dynamic intervals parsing trades natively
         }
 
         // Manual Execution Request Routing

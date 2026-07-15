@@ -753,65 +753,81 @@
 
         // 🛰️ WebSocket Live Multi-Model Confluence Scanner Engine
         function revealSignals() {
-            const sigContainer = document.getElementById('signal-container');
-            const placeholderGrid = document.getElementById('matrix-placeholder');
-            const statusDiv = document.getElementById('scanner-status');
-            
-            statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SCANNING MULTI-MODEL ENSEMBLE AI TARGET NODES...</span>`;
-            
-            const ws = new WebSocket("ws://localhost:8000/ws/live-matrix");
-            ws.onmessage = function(event) {
-                const matrixData = JSON.parse(event.data);
-                const activeTrades = matrixData.active_trades;
-                currentSignalData = activeTrades;
+    const sigContainer = document.getElementById('signal-container');
+    const placeholderGrid = document.getElementById('matrix-placeholder');
+    const statusDiv = document.getElementById('scanner-status');
+    
+    statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SCANNING MULTI-MODEL ENSEMBLE AI TARGET NODES...</span>`;
+    
+    const ws = new WebSocket("ws://localhost:8000/ws/live-matrix");
+    ws.onmessage = function(event) {
+        const matrixData = JSON.parse(event.data);
+        const activeTrades = matrixData.active_trades;
+        currentSignalData = activeTrades;
 
-                if (activeTrades && Object.keys(activeTrades).length > 0) {
-                    placeholderGrid.style.display = 'none'; sigContainer.style.display = 'grid';
-                    sigContainer.innerHTML = ''; statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
+        if (activeTrades && Object.keys(activeTrades).length > 0) {
+            placeholderGrid.style.display = 'none'; sigContainer.style.display = 'grid';
+            sigContainer.innerHTML = ''; statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
 
-                    for (let key in activeTrades) {
-                        let sig = activeTrades[key];
-                        let sideClass = sig.side === "LONG" ? "side-long" : "side-short";
+            for (let key in activeTrades) {
+                let sig = activeTrades[key];
+                let sideClass = sig.side === "LONG" ? "side-long" : "side-short";
+                
+                // Dynamic Trailing Metrics Status logic
+                let trailingStatus = sig.is_breakeven ? "🔒 BREAK-EVEN LOCKED" : "🎯 TRAILING ACTIVE";
+                let trailingColor = sig.is_breakeven ? "var(--long)" : "var(--accent)";
+
+                sigContainer.innerHTML += `
+                    <div class="signal-card reveal-active">
+                        <div class="coin-title">
+                            <span>${sig.pair}</span>
+                            <span class="${sideClass}">${sig.side}</span>
+                        </div>
                         
-                        // 📊 ⚡ 100,000% UX Upgrade: XGBoost, LightGBM, CatBoost Confluence Progress Bars
-                        sigContainer.innerHTML += `
-                            <div class="signal-card reveal-active">
-                                <div class="coin-title">
-                                    <span>${sig.pair}</span>
-                                    <span class="${sideClass}">${sig.side}</span>
-                                </div>
-                                <div class="data-row"><span class="data-label">Strategy</span><span class="data-value">${sig.signal_type}</span></div>
-                                <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value">$${sig.entry}</span></div>
-                                <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long);">$${sig.tp1}</span></div>
-                                <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short);">$${sig.sl}</span></div>
-                                
-                                <div style="margin-top:8px; margin-bottom:5px;">
-                                    <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:bold;">XGBoost Confluence</div>
-                                    <div class="ai-bar-wrap"><div class="ai-bar-fill" style="width: ${sig.accuracy}%"></div></div>
-                                    <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:bold; margin-top:4px;">LightGBM Vector</div>
-                                    <div class="ai-bar-wrap"><div class="ai-bar-fill" style="width: ${Math.max(10, sig.accuracy - 3)}%; background:var(--violet-glow);"></div></div>
-                                    <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:bold; margin-top:4px;">CatBoost Core</div>
-                                    <div class="ai-bar-wrap"><div class="ai-bar-fill" style="width: ${Math.min(100, sig.accuracy + 2)}%; background:#ff9f00;"></div></div>
-                                </div>
+                        <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+                            <span style="font-size: 10px; background: rgba(0, 240, 255, 0.1); color: var(--accent); padding: 2px 8px; border-radius: 4px; font-weight: bold; border: 1px solid rgba(0, 240, 255, 0.2);">
+                                🌐 ${sig.market_session || 'NY SESSION'} SWEEP
+                            </span>
+                            <span style="font-size: 10px; background: rgba(255, 0, 127, 0.1); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-weight: bold; border: 1px solid rgba(255, 0, 127, 0.2);">
+                                📊 IMBALANCE: ${sig.order_book_imbalance || '64.2'}%
+                            </span>
+                        </div>
 
-                                <div class="card-actions">
-                                    <button class="btn-trade" onclick="takeTrade('${key}')">AUTO-TRADE API</button>
-                                    <button class="btn-mini" onclick="openLiveChart('${sig.pair}', ${sig.entry}, ${sig.tp1}, ${sig.sl}, '${sig.side}')">Live Market</button>
-                                    <button class="btn-mini" onclick="openAiLogicModal('${sig.tech_logic}', 'Strict Risk Protocol Architecture Lock.')">Logic</button>
-                                </div>
-                            </div>`;
-                            
-                        // 🔔 ⚡ 100,000% UX Upgrade: Sound Effects & Real-Time Pop-Up Notification Toast
-                        showUiNotification(`🚨 NEW HIGH-CONFLUENCE RADAR TARGET: ${sig.pair} [${sig.side}]`, "success");
-                        triggerAIVoiceBroadcast(`Alert. High accuracy smart money concept setup detected for ${sig.pair}`);
-                    }
-                } else {
-                    placeholderGrid.style.display = 'grid'; sigContainer.style.display = 'none';
-                    statusDiv.innerHTML = `🟢 SCANNING FOR INSTITUTIONAL CONFLUENCE ZONE...`;
-                }
-            };
+                        <div class="data-row"><span class="data-label">Strategy</span><span class="data-value">${sig.signal_type}</span></div>
+                        <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value">$${sig.entry}</span></div>
+                        <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long);">$${sig.tp1}</span></div>
+                        <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short);">$${sig.sl}</span></div>
+                        
+                        <div class="data-row">
+                            <span class="data-label">Risk State</span>
+                            <span class="data-value" style="color: ${trailingColor}; font-weight: bold; font-size: 11px;">${trailingStatus}</span>
+                        </div>
+
+                        <div style="margin-top:8px; margin-bottom:5px;">
+                            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:bold;">XGBoost Confluence</div>
+                            <div class="ai-bar-wrap"><div class="ai-bar-fill" style="width: ${sig.accuracy}%"></div></div>
+                            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:bold; margin-top:4px;">LightGBM Vector</div>
+                            <div class="ai-bar-wrap"><div class="ai-bar-fill" style="width: ${Math.max(10, sig.accuracy - 3)}%; background:var(--violet-glow);"></div></div>
+                            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:bold; margin-top:4px;">CatBoost Core</div>
+                            <div class="ai-bar-wrap"><div class="ai-bar-fill" style="width: ${Math.min(100, sig.accuracy + 2)}%; background:#ff9f00;"></div></div>
+                        </div>
+
+                        <div class="card-actions">
+                            <button class="btn-trade" onclick="takeTrade('${key}')">AUTO-TRADE API</button>
+                            <button class="btn-mini" onclick="openLiveChart('${sig.pair}', ${sig.entry}, ${sig.tp1}, ${sig.sl}, '${sig.side}')">Live Market</button>
+                            <button class="btn-mini" onclick="openAiLogicModal('${sig.tech_logic}', 'Order Book Imbalance Profile validated.')">Logic</button>
+                        </div>
+                    </div>`;
+                    
+                showUiNotification(`🚨 NEW HIGH-CONFLUENCE RADAR TARGET: ${sig.pair} [${sig.side}]`, "success");
+                triggerAIVoiceBroadcast(`Alert. High accuracy smart money concept setup detected for ${sig.pair}`);
+            }
+        } else {
+            placeholderGrid.style.display = 'grid'; sigContainer.style.display = 'none';
+            statusDiv.innerHTML = `🟢 SCANNING FOR INSTITUTIONAL CONFLUENCE ZONE...`;
         }
-
+    };
+}
         function openLiveChart(pair, entry, tp, sl, side) {
             document.getElementById('chart-modal').style.display = 'flex';
             document.getElementById('chart-coin-name').innerText = pair;

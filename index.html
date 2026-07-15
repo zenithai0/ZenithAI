@@ -413,20 +413,25 @@
         .logic-box-container, .admin-panel-container, .account-box-container { max-width: 700px; width: 90%; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 35px; position: relative; max-height: 85vh; overflow-y: auto; }
         .logic-header { font-size: 24px; font-weight: 800; color: #fff; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; margin-bottom: 25px; font-family: 'Rajdhani', sans-serif;}
         .logic-content-block { background: rgba(0,0,0,0.6); border: 1px solid var(--card-border); padding: 18px; border-radius: 12px; font-family: monospace; font-size: 14px; color: var(--accent); margin-bottom: 20px; white-space: pre-wrap; }
+        
+        .admin-trade-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 2fr; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); font-size: 12px; text-align: center; align-items: center; }
+        .win-text { color: var(--long); font-weight: bold; }
+        .loss-text { color: var(--short); font-weight: bold; }
     </style>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <div id="ui-notification-container"></div>
+    <div id="ui-notification-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div id="login-screen">
         <div class="glass-panel auth-box">
-            <h2 style="background: -webkit-linear-gradient(0deg, var(--primary), var(--violet-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ZENITHAI V35</h2>
+            <h2 style="background: -webkit-linear-gradient(0deg, var(--primary), var(--violet-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ZENITHAI V90.1</h2>
             <p>Institutional Command Center</p>
             <input type="password" id="access-key" placeholder="Enter License Key" />
             <button class="btn" onclick="verifyFirebaseKey()">INITIALIZE MATRIX</button>
@@ -440,31 +445,15 @@
                 <h2 style="color: var(--primary);">SYSTEM INITIALIZATION</h2>
                 <p>Configure your API settings for the Auto-Execution Module.</p>
             </div>
-            
             <div style="background: rgba(0,255,170,0.15); color: var(--long); padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-bottom: 25px; border: 1px solid var(--long);">
                 <i class="fas fa-shield-alt"></i> END-TO-END ENCRYPTED
             </div>
-
-            <div class="input-group">
-                <label>Nickname (User Profile Name)</label>
-                <input type="text" id="setup-nickname" placeholder="Enter a Nickname" />
-            </div>
-            <div class="input-group">
-                <label>WhatsApp Number (VIP Alerts)</label>
-                <input type="text" id="setup-wa" placeholder="whatsapp:+947XXXXXXXX" />
-            </div>
-            <div class="input-group">
-                <label>Binance API Key (Trading Only)</label>
-                <input type="password" id="setup-api-key" placeholder="Enter API Key" />
-            </div>
-            <div class="input-group">
-                <label>Binance API Secret</label>
-                <input type="password" id="setup-api-secret" placeholder="Enter API Secret" />
-            </div>
-
+            <div class="input-group"><label>Nickname (User Profile Name)</label><input type="text" id="setup-nickname" placeholder="Enter a Nickname" /></div>
+            <div class="input-group"><label>WhatsApp Number (VIP Alerts)</label><input type="text" id="setup-wa" placeholder="whatsapp:+947XXXXXXXX" /></div>
+            <div class="input-group"><label>Binance API Key (Trading Only)</label><input type="password" id="setup-api-key" placeholder="Enter API Key" /></div>
+            <div class="input-group"><label>Binance API Secret</label><input type="password" id="setup-api-secret" placeholder="Enter API Secret" /></div>
             <p id="setup-error-msg" style="color: var(--short); display: none; margin-bottom: 15px; font-weight:bold; font-size: 13px; text-align: left;"><i class="fas fa-exclamation-triangle"></i> ⚠️ Please fill all required fields.</p>
-
-            <button class="btn" onclick="saveUserSetup()" id="setup-btn" style="background: var(--primary); color:#fff; width: 100%;">SECURE & FINISH SETUP</button>
+            <button class="btn" onclick="saveUserSetup()" id="setup-btn" style="width: 100%;">SECURE & FINISH SETUP</button>
         </div>
     </div>
 
@@ -473,40 +462,22 @@
             <div style="display: flex; align-items: center; gap: 15px;">
                 <svg width="45" height="45" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                   <defs>
-                    <linearGradient id="diamond-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#ff007f" />
-                      <stop offset="100%" stop-color="#00f0ff" />
-                    </linearGradient>
-                    <linearGradient id="z-grad" x1="100%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stop-color="#ffffff" />
-                      <stop offset="100%" stop-color="#00f0ff" />
-                    </linearGradient>
-                    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="8" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
+                    <linearGradient id="diamond-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff007f" /><stop offset="100%" stop-color="#00f0ff" /></linearGradient>
+                    <linearGradient id="z-grad" x1="100%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#ffffff" /><stop offset="100%" stop-color="#00f0ff" /></linearGradient>
+                    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="8" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                   </defs>
-
                   <polygon points="100,15 185,100 100,185 15,100" fill="rgba(255, 0, 127, 0.05)" stroke="url(#diamond-grad)" stroke-width="8" filter="url(#neon-glow)"/>
                   <polygon points="100,35 165,100 100,165 35,100" fill="none" stroke="rgba(0, 240, 255, 0.4)" stroke-width="2" />
                   <text x="100" y="138" font-family="'Rajdhani', sans-serif" font-size="110" font-weight="800" text-anchor="middle" fill="url(#z-grad)" filter="url(#neon-glow)">Z</text>
                 </svg>
-                
                 <div>
-                    <h1 style="font-size: 32px; margin: 0; background: -webkit-linear-gradient(0deg, var(--primary), var(--violet-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ZeNithAi</h1>
+                    <h1 id="systemStatus" style="font-size: 32px; margin: 0; background: -webkit-linear-gradient(0deg, var(--primary), var(--violet-glow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ZeNithAi</h1>
                     <p style="margin: 0; font-size: 12px; color: var(--text-muted); font-weight: bold; letter-spacing: 2px;">ULTIMATE TERMINAL</p>
                 </div>
             </div>
             <div class="nav-actions">
                 <button id="admin-btn" class="btn" style="display: none; background: var(--primary); color: #fff; padding: 10px 20px; font-size: 13px; border: 1px solid rgba(255,255,255,0.2);" onclick="openAdminPanel()">👑 AI LOGS</button>
-                
-                <button id="voice-toggle-btn" class="btn" style="background: rgba(0, 240, 255, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 10px 15px; font-size: 13px;" onclick="toggleVoiceAssist()">
-                    <i class="fas fa-volume-up"></i> VOICE: ON
-                </button>
-
+                <button id="voice-toggle-btn" class="btn" style="background: rgba(0, 240, 255, 0.1); color: var(--accent); border: 1px solid var(--accent); padding: 10px 15px; font-size: 13px;" onclick="toggleVoiceAssist()"><i class="fas fa-volume-up"></i> VOICE: ON</button>
                 <div class="user-profile" id="user-badge" style="display:none;" onclick="openAccountSettings()">
                     <div class="profile-info">
                         <div class="profile-name" id="user-welcome-text">USER</div>
@@ -550,19 +521,17 @@
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">P&L Ratio</div>
-                            <div class="stat-val" id="user-pnl-ratio" style="color:var(--long);">0/0</div>
-                            <div class="pnl-perf-bars" id="pnl-visual-bars">
-                                <div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div>
+                            <div style="width: 100%; height: 45px; margin-top: 5px; margin-bottom: 5px;">
+                                <canvas id="pnlDoughnutChart"></canvas>
                             </div>
+                            <div class="stat-val" id="user-pnl-ratio" style="color:var(--long); font-size:15px; margin-top:4px;">$0.00</div>
                         </div>
                     </div>
                     
                     <div class="matrix-sub-layout">
                         <div id="radar-section">
                             <div class="radar-title">Market Inflows</div>
-                            <div class="radar-scope">
-                                <div class="radar-sweep"></div>
-                            </div>
+                            <div class="radar-scope"><div class="radar-sweep"></div></div>
                             <canvas id="heartbeat-canvas"></canvas>
                             <button class="btn" id="scan-btn" onclick="revealSignals()" style="font-size: 11px; padding: 10px 15px; width: 100%; box-shadow: 0 0 10px rgba(255, 0, 127, 0.2);">Scan Signals</button>
                         </div>
@@ -570,7 +539,6 @@
                         <div>
                             <div class="adv-modules-header">Pro Analysis Modules</div>
                             <div class="adv-modules-grid">
-                                
                                 <div class="module-card" id="mod-whale">
                                     <span style="font-weight: bold; margin-bottom:2px;">🐋 Whale Inflows</span>
                                     <div class="embedded-mini-chart">
@@ -582,53 +550,34 @@
                                 <div class="module-card">
                                     <span>🔥 Liquidity Map</span>
                                     <div class="embedded-ring-box">
-                                        <svg class="embedded-ring-svg" viewBox="0 0 36 36">
-                                            <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(0,240,255,0.1)" stroke-width="3"></circle>
-                                            <circle cx="18" cy="18" r="16" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="75 100"></circle>
-                                        </svg>
+                                        <svg class="embedded-ring-svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(0,240,255,0.1)" stroke-width="3"></circle><circle cx="18" cy="18" r="16" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="75 100"></circle></svg>
                                     </div>
-                                    <span class="module-badge">Phase 3</span>
+                                    <span id="liquidityStatus" style="font-size: 11px; font-family: monospace; color: var(--accent); display:block;">Phase 3</span>
                                 </div>
                                 
                                 <div class="module-card" onclick="openStrategyBuilder()" style="cursor:pointer; border-color: var(--accent);">
                                     <span>🧠 Strategy Builder</span>
-                                    <div class="embedded-mini-chart" style="height:35px;">
-                                        <div class="embedded-bar" style="background:var(--accent); height:40%"></div>
-                                        <div class="embedded-bar" style="background:var(--accent); height:85%"></div>
-                                        <div class="embedded-bar" style="background:var(--accent); height:60%"></div>
-                                    </div>
+                                    <div class="embedded-mini-chart" style="height:35px;"><div class="embedded-bar" style="background:var(--accent); height:40%"></div><div class="embedded-bar" style="background:var(--accent); height:85%"></div><div class="embedded-bar" style="background:var(--accent); height:60%"></div></div>
                                     <span class="module-badge" style="background:var(--accent); color:#000; font-weight:bold;">ACTIVE</span>
                                 </div>
                                 
                                 <div class="module-card" onclick="openPsychologyDash()" style="cursor:pointer; border-color: var(--primary);">
                                     <span>❤️ Psychology Dash</span>
-                                    <div class="embedded-ring-box">
-                                        <svg class="embedded-ring-svg" viewBox="0 0 36 36">
-                                            <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,0,127,0.1)" stroke-width="3"></circle>
-                                            <circle cx="18" cy="18" r="16" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="90 100"></circle>
-                                        </svg>
-                                    </div>
+                                    <div class="embedded-ring-box"><svg class="embedded-ring-svg" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,0,127,0.1)" stroke-width="3"></circle><circle cx="18" cy="18" r="16" fill="none" stroke="var(--primary)" stroke-width="3" stroke-dasharray="90 100"></circle></svg></div>
                                     <span class="module-badge" style="background:var(--primary); color:#fff; font-weight:bold;">ACTIVE</span>
                                 </div>
                                 
                                 <div class="module-card" onclick="openTradeReplay()" style="cursor:pointer; border-color: var(--accent);">
                                     <span>🎥 Trade Replay</span>
-                                    <div class="replay-candle-track">
-                                        <div class="mock-candle"></div><div class="mock-candle red-c"></div><div class="mock-candle"></div>
-                                        <div class="replay-playback-line"></div>
-                                    </div>
+                                    <div class="replay-candle-track"><div class="mock-candle"></div><div class="mock-candle red-c"></div><div class="mock-candle"></div><div class="replay-playback-line"></div></div>
                                     <span class="module-badge" style="background:var(--accent); color:#000; font-weight:bold;">ACTIVE</span>
                                 </div>
                                 
                                 <div class="module-card" style="opacity: 0.9; border-color: var(--accent);">
                                     <span>🎙️ Voice Assist</span>
-                                    <div class="phone-voice-wave">
-                                        <div class="voice-mic-line"></div><div class="voice-mic-line"></div><div class="voice-mic-line"></div>
-                                        <div class="voice-mic-line"></div><div class="voice-mic-line"></div><div class="voice-mic-line"></div>
-                                    </div>
+                                    <div class="phone-voice-wave"><div class="voice-mic-line"></div><div class="voice-mic-line"></div><div class="voice-mic-line"></div><div class="voice-mic-line"></div><div class="voice-mic-line"></div><div class="voice-mic-line"></div></div>
                                     <span class="module-badge" style="background:rgba(0,240,255,0.15); color:var(--accent);">INTEGRATED</span>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -641,45 +590,8 @@
                     <div class="placeholder-box"><i class="fas fa-search-dollar"></i>Liquidity Map Idle</div>
                     <div class="placeholder-box"><i class="fas fa-server"></i>Neural Nodes Ready</div>
                 </div>
-                
                 <div class="signal-grid" id="signal-container" style="display: none;"></div>
             </div>
-        </div>
-    </div>
-
-    <div id="replay-modal" class="modal-overlay">
-        <div class="admin-panel-container" style="max-width: 750px;">
-            <button class="close-btn" onclick="closeTradeReplay()"><i class="fas fa-times"></i></button>
-            <div class="logic-header" style="color: var(--accent);">🎥 AI TRADE REPLAY SIMULATOR</div>
-            <p style="color:var(--text-muted); font-size:13px; margin-top:-10px; margin-bottom:20px;">Review past algorithmic executions step-by-step to optimize custom strategy builders.</p>
-            <div id="replay-logs-container" style="max-height: 60vh; overflow-y: auto;">
-                Loading Historical Execution Node Tracks...
-            </div>
-        </div>
-    </div>
-
-    <div id="psychology-modal" class="modal-overlay">
-        <div class="account-box-container" style="max-width: 600px; border-color: var(--primary);">
-            <button class="close-btn" onclick="closePsychologyDash()"><i class="fas fa-times"></i></button>
-            <div class="logic-header" style="color: var(--primary);">❤️ AI PSYCHOLOGY DASHBOARD</div>
-            <p style="color:var(--text-muted); font-size:13px; margin-top:-10px; margin-bottom:25px;">Real-time emotional exposure guard and neural trading state analysis.</p>
-            <div style="background: rgba(255,0,127,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 20px; text-align: center;">
-                <span style="color:var(--text-muted); font-size:12px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:5px;">Current Trading State</span>
-                <span id="psy-trader-state" style="color: var(--long); font-size: 24px; font-weight: 800; font-family:'Rajdhani', sans-serif; letter-spacing:1px; text-shadow: 0 0 10px var(--long);">🟢 STABLE & RATIONAL</span>
-            </div>
-            <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
-                <h3 style="color:#fff; font-size:14px; margin-bottom:10px; font-family:'Inter', sans-serif; text-transform:uppercase; font-weight:bold; color:var(--accent);"><i class="fas fa-brain"></i> AI Mindset Directive</h3>
-                <p id="psy-ai-directive" style="color: var(--text-main); font-size: 13px; line-height: 1.6; margin: 0;">Market conditions are tracked alongside your personal win/loss performance. System indicates fully rational environment. Keep executing with pre-defined risk sizing.</p>
-            </div>
-            <div style="background: rgba(255,23,68,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,23,68,0.2); margin-bottom: 25px;">
-                <h3 style="color:#fff; font-size:14px; margin-bottom:8px; color:var(--short);"><i class="fas fa-shield-alt"></i> Max Drawdown Lock (Revenge Trade Protection)</h3>
-                <p style="color:var(--text-muted); font-size:12px; margin: 0 0 15px 0;">If your daily consecutive losses cross this limit, ZenithAI will automatically lock the execution core for 24 hours to safeguard capital.</p>
-                <div class="input-group">
-                    <label style="color:var(--short);">Max Daily Loss Limit (Consecutive Losses Count)</label>
-                    <input type="text" id="psy-loss-limit" value="3" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,23,68,0.3); background: rgba(0,0,0,0.6); color: var(--short); font-size: 16px; outline:none;" />
-                </div>
-            </div>
-            <button class="btn" onclick="savePsychologySettings()" id="psy-save-btn" style="width: 100%; background: var(--primary); box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);">UPDATE PSYCHOLOGY GUARD</button>
         </div>
     </div>
 
@@ -690,33 +602,57 @@
             <p style="color:var(--text-muted); font-size:13px; margin-top:-10px; margin-bottom:25px;">Customize the AI core parameters and capital allocation matrix.</p>
             <div style="background: rgba(0,240,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(0,240,255,0.15); margin-bottom: 20px;">
                 <h3 style="color:#fff; font-size:16px; margin-bottom:10px;"><i class="fas fa-wallet" style="color:var(--accent)"></i> Risk & Capital Management</h3>
-                <div class="input-group">
-                    <label>Trade Size (% of Total Capital)</label>
-                    <input type="text" id="strat-capital-pct" placeholder="e.g. 5 for 5%" value="5" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--accent); font-size: 16px; outline:none; margin-bottom:15px;" />
-                </div>
-                <div class="input-group">
-                    <label>AI Accuracy Score Threshold (%)</label>
-                    <input type="text" id="strat-score-threshold" placeholder="e.g. 70" value="70" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--accent); font-size: 16px; outline:none;" />
-                </div>
+                <div class="input-group"><label>Trade Size (% of Total Capital)</label><input type="text" id="strat-capital-pct" value="3" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--accent); font-size: 16px; outline:none; margin-bottom:15px;" /></div>
+                <div class="input-group"><label>AI Accuracy Score Threshold (%)</label><input type="text" id="strat-score-threshold" value="70" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--accent); font-size: 16px; outline:none;" /></div>
             </div>
             <div style="background: rgba(255,0,127,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,0,127,0.15); margin-bottom: 25px;">
                 <h3 style="color:#fff; font-size:16px; margin-bottom:10px;"><i class="fas fa-sliders-h" style="color:var(--primary)"></i> Technical Trigger Conditions</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
-                    <div class="input-group">
-                        <label>RSI Oversold (Long)</label>
-                        <input type="text" id="strat-rsi-low" value="30" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--primary); font-size: 16px; outline:none;" />
-                    </div>
-                    <div class="input-group">
-                        <label>RSI Overbought (Short)</label>
-                        <input type="text" id="strat-rsi-high" value="70" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--primary); font-size: 16px; outline:none;" />
-                    </div>
+                    <div class="input-group"><label>RSI Oversold (Long)</label><input type="text" id="strat-rsi-low" value="30" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--primary); font-size: 16px; outline:none;" /></div>
+                    <div class="input-group"><label>RSI Overbought (Short)</label><input type="text" id="strat-rsi-high" value="70" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--primary); font-size: 16px; outline:none;" /></div>
                 </div>
-                <div class="input-group">
-                    <label>Minimum Volume Surge (x-Times)</label>
-                    <input type="text" id="strat-vol-spike" value="3.0" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--primary); font-size: 16px; outline:none;" />
-                </div>
+                <div class="input-group"><label>Minimum Volume Surge (x-Times)</label><input type="text" id="strat-vol-spike" value="3.0" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.6); color: var(--primary); font-size: 16px; outline:none;" /></div>
             </div>
-            <button class="btn" onclick="saveCustomStrategy()" id="strat-save-btn" style="width: 100%; background: linear-gradient(90deg, var(--accent), var(--violet-glow)); box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);">DEPLOY CUSTOM STRATEGY</button>
+            <button class="btn" onclick="closeStrategyBuilder()" id="strat-save-btn" style="width: 100%; background: linear-gradient(90deg, var(--accent), var(--violet-glow));">DEPLOY CUSTOM STRATEGY</button>
+        </div>
+    </div>
+
+    <div id="psychology-modal" class="modal-overlay">
+        <div class="account-box-container" style="max-width: 600px; border-color: var(--primary);">
+            <button class="close-btn" onclick="closePsychologyDash()"><i class="fas fa-times"></i></button>
+            <div class="logic-header" style="color: var(--primary);">❤️ AI PSYCHOLOGY DASHBOARD</div>
+            <div style="background: rgba(255,0,127,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 20px; text-align: center;">
+                <span style="color:var(--text-muted); font-size:12px; font-weight:bold; text-transform:uppercase; display:block; margin-bottom:5px;">Current Trading State</span>
+                <span id="psy-trader-state" style="color: var(--long); font-size: 24px; font-weight: 800; font-family:'Rajdhani';">🟢 STABLE & RATIONAL</span>
+            </div>
+            <div class="input-group"><label style="color:var(--short);">Max Daily Consecutive Loss Limit</label><input type="text" id="psy-loss-limit" value="3" style="width: 100%; box-sizing: border-box; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,23,68,0.3); background: rgba(0,0,0,0.6); color: var(--short); font-size: 16px; outline:none;" /></div>
+            <button class="btn" onclick="closePsychologyDash()" id="psy-save-btn" style="width: 100%; background: var(--primary);">UPDATE PSYCHOLOGY GUARD</button>
+        </div>
+    </div>
+
+    <div id="account-modal" class="modal-overlay">
+        <div class="account-box-container">
+            <button class="close-btn" onclick="closeAccountSettings()"><i class="fas fa-times"></i></button>
+            <div class="logic-header" style="color: var(--primary);">⚙️ MASTER ACCOUNT SETTINGS</div>
+            <div class="input-group"><label>Nickname</label><input type="text" id="edit-nickname" style="width: 100%; box-sizing: border-box; padding: 12px;" /></div>
+            <div class="input-group"><label>WhatsApp Number</label><input type="text" id="edit-wa" style="width: 100%; box-sizing: border-box; padding: 12px;" /></div>
+            <div class="input-group"><label>Binance API Key</label><input type="password" id="edit-api-key" style="width: 100%; box-sizing: border-box; padding: 12px;" /></div>
+            <div class="input-group"><label>Binance API Secret</label><input type="password" id="edit-api-secret" style="width: 100%; box-sizing: border-box; padding: 12px;" /></div>
+            <div class="input-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px; background: rgba(255,0,127,0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--card-border);">
+                <input type="checkbox" id="edit-vip-auto" style="width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--primary);">
+                <label style="margin: 0; color: #fff; font-size: 14px; text-transform: none;">Enable Full Auto-Trade for VIP Matrix Signals</label>
+            </div>
+            <button class="btn" onclick="saveAccountSettings()" id="edit-save-btn" style="width: 100%;">UPDATE SETTINGS</button>
+        </div>
+    </div>
+
+    <div id="replay-modal" class="modal-overlay">
+        <div class="admin-panel-container" style="max-width: 750px; background: var(--card-bg); border: 1px solid var(--card-border); padding: 35px; border-radius: 20px; max-height: 85vh; overflow-y: auto; width:90%;">
+            <button class="close-btn" onclick="closeTradeReplay()"><i class="fas fa-times"></i></button>
+            <div class="logic-header" style="color: var(--accent);">🎥 POSTGRESQL HISTORICAL TRADE REPLAY</div>
+            <div id="replay-logs-container" style="max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                Loading Historical Execution Node Tracks...
+            </div>
         </div>
     </div>
 
@@ -724,8 +660,8 @@
         <div class="chart-container">
             <button class="close-btn" onclick="closeLiveChart()"><i class="fas fa-times"></i></button>
             <div style="border-bottom: 2px solid var(--primary); padding-bottom: 15px; display:flex; align-items:center; gap:15px; margin-bottom: 5px;">
-                <span id="chart-coin-name" style="color: #fff; font-size: 26px; font-weight: 800; font-family:'Rajdhani', sans-serif; letter-spacing: 1px;">BTC/USDT</span>
-                <span id="chart-side" style="background: rgba(255,0,127,0.15); color: var(--primary); padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight:bold; border: 1px solid var(--primary); text-transform: uppercase;">LIVE CHANNELS</span>
+                <span id="chart-coin-name" style="color: #fff; font-size: 26px; font-weight: 800; font-family:'Rajdhani';">BTC/USDT</span>
+                <span id="chart-side" style="background: rgba(255,0,127,0.15); color: var(--primary); padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight:bold; border: 1px solid var(--primary);">LIVE QUANT CHANNEL</span>
             </div>
             <div id="tv-chart"></div>
         </div>
@@ -735,55 +671,15 @@
         <div class="logic-box-container">
             <button class="close-btn" onclick="closeAiLogicModal()"><i class="fas fa-times"></i></button>
             <div class="logic-header">🧠 AI MATRIX LOGIC</div>
-            <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px; text-transform:uppercase; font-weight:bold;">Technical Indicators:</div>
             <div id="tech-logic-field" class="logic-content-block"></div>
-            <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px; text-transform:uppercase; font-weight:bold;">Risk Protocol:</div>
-            <div id="risk-logic-field" class="logic-content-block" style="color:var(--primary); border-color: var(--card-border);"></div>
-        </div>
-    </div>
-
-    <div id="account-modal" class="modal-overlay">
-        <div class="account-box-container">
-            <button class="close-btn" onclick="closeAccountSettings()"><i class="fas fa-times"></i></button>
-            <div class="logic-header" style="color: var(--primary);">⚙️ ACCOUNT SETTINGS</div>
-            <p style="color:var(--text-muted); font-size:13px; margin-top:-10px; margin-bottom:25px;">Update your Nickname, WhatsApp, and Binance API credentials.</p>
-            <div class="input-group">
-                <label>Nickname</label>
-                <input type="text" id="edit-nickname" />
-            </div>
-            <div class="input-group">
-                <label>WhatsApp Number</label>
-                <input type="text" id="edit-wa" />
-            </div>
-            <div class="input-group">
-                <label>Binance API Key</label>
-                <input type="password" id="edit-api-key" />
-            </div>
-            <div class="input-group">
-                <label>Binance API Secret</label>
-                <input type="password" id="edit-api-secret" />
-            </div>
-            <div class="input-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px; background: rgba(255,0,127,0.05); padding: 15px; border-radius: 12px; border: 1px solid var(--card-border);">
-                <input type="checkbox" id="edit-vip-auto" style="width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--primary);">
-                <label style="margin: 0; color: #fff; font-size: 14px; text-transform: none;">Enable Auto-Trade for <b>VIP Signals (85%+)</b></label>
-            </div>
-            <button class="btn" onclick="saveAccountSettings()" id="edit-save-btn" style="width: 100%;">UPDATE SETTINGS</button>
-        </div>
-    </div>
-
-    <div id="admin-modal" class="modal-overlay">
-        <div class="admin-panel-container">
-            <button class="close-btn" onclick="closeAdminPanel()"><i class="fas fa-times"></i></button>
-            <div class="logic-header" style="color: var(--primary);">👑 ADMIN: AI AUTO-TRACKING LOGS</div>
-            <p style="color:var(--text-muted); font-size:13px; margin-top:-10px; margin-bottom:25px;">24/7 background execution analysis and AI self-reflection records.</p>
-            <div id="admin-logs-content">Loading Data...</div>
+            <div id="risk-logic-field" class="logic-content-block" style="color:var(--primary);"></div>
         </div>
     </div>
 
     <script>
-        // ==============================================================================
-        // 🚀 CRITICAL UPDATE: COUPLING TO YOUR NEW FIREBASE DB INSTANCE
-        // ==============================================================================
+        const API_URL = "http://localhost:8000";
+        
+        // 🔴 ඔයාගේ ඔරිජිනල් Firebase Realtime Configuration එක මෙතන සුරැකුවා
         const firebaseConfig = { 
             apiKey: "YOUR_NEW_API_KEY",
             authDomain: "YOUR_NEW_AUTH_DOMAIN",
@@ -801,23 +697,23 @@
         let activeUserKey = null;
         let activeChart = null;
         let isVoiceAssistEnabled = true;
+        let pnlDoughnutChart = null;
 
         function showUiNotification(message, type = "info") {
             const container = document.getElementById('ui-notification-container');
             const toast = document.createElement('div');
-            toast.className = `ui-toast ${type}`;
+            toast.style.background = "var(--card-bg)";
+            toast.style.border = "1px solid var(--card-border)";
+            toast.style.padding = "12px 24px";
+            toast.style.borderRadius = "12px";
+            toast.style.color = "#fff";
+            toast.style.backdropFilter = "blur(10px)";
             
-            let icon = '<i class="fas fa-info-circle" style="color:var(--primary)"></i>';
-            if(type === "success") icon = '<i class="fas fa-check-circle" style="color:var(--long)"></i>';
-            if(type === "error") icon = '<i class="fas fa-exclamation-triangle" style="color:var(--short)"></i>';
-
-            toast.innerHTML = `${icon} <span>${message}</span>`;
+            let color = type === "success" ? "var(--long)" : (type === "error" ? "var(--short)" : "var(--accent)");
+            toast.style.borderLeft = `4px solid ${color}`;
+            toast.innerHTML = `<span>${message}</span>`;
             container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.animation = "slideDown 0.3s ease reverse forwards";
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            setTimeout(() => toast.remove(), 4000);
         }
 
         function triggerAIVoiceBroadcast(textMessage) {
@@ -825,282 +721,182 @@
             try {
                 window.speechSynthesis.cancel();
                 const speech = new SpeechSynthesisUtterance(textMessage);
-                speech.lang = 'en-US';
-                speech.rate = 0.88; 
-                speech.pitch = 0.85; 
-                window.speechSynthesis.speak(speech);
-            } catch (e) { console.log("Voice Engine Muted: ", e); }
+                speech.lang = 'en-US'; speech.rate = 0.90; window.speechSynthesis.speak(speech);
+            } catch (e) { console.log(e); }
         }
 
         function toggleVoiceAssist() {
             isVoiceAssistEnabled = !isVoiceAssistEnabled;
             const btn = document.getElementById('voice-toggle-btn');
-            if (isVoiceAssistEnabled) {
-                btn.innerHTML = `<i class="fas fa-volume-up"></i> VOICE: ON`;
-                btn.style.borderColor = "var(--accent)";
-                btn.style.color = "var(--accent)";
-                showUiNotification("AI Voice Assistant Activated.", "success");
-            } else {
-                btn.innerHTML = `<i class="fas fa-volume-mute"></i> VOICE: OFF`;
-                btn.style.borderColor = "var(--text-muted)";
-                btn.style.color = "var(--text-muted)";
-                showUiNotification("AI Voice Assistant Deactivated.", "info");
-            }
+            btn.innerHTML = isVoiceAssistEnabled ? `<i class="fas fa-volume-up"></i> VOICE: ON` : `<i class="fas fa-volume-mute"></i> VOICE: OFF`;
         }
 
         function initHeartbeatPulse() {
-            const canvas = document.getElementById('heartbeat-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            let x = 0;
-            
-            ctx.strokeStyle = '#ff007f';
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = '#ff007f';
-
+            const canvas = document.getElementById('heartbeat-canvas'); if (!canvas) return;
+            const ctx = canvas.getContext('2d'); let x = 0;
+            ctx.strokeStyle = '#ff007f'; ctx.lineWidth = 2;
             function draw() {
-                if (x > canvas.width) {
-                    x = 0;
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
-                ctx.beginPath();
-                ctx.moveTo(x, canvas.height / 2);
-                x += 2;
+                if (x > canvas.width) { x = 0; ctx.clearRect(0, 0, canvas.width, canvas.height); }
+                ctx.beginPath(); ctx.moveTo(x, canvas.height / 2); x += 2;
                 let y = canvas.height / 2;
-                if (x % 40 === 0) { y -= 15; } 
-                else if (x % 40 === 4) { y += 15; } 
-                else if (x % 40 === 8) { y = canvas.height / 2; }
-                ctx.lineTo(x, y);
-                ctx.stroke();
-                requestAnimationFrame(draw);
-            }
-            draw();
+                if (x % 40 === 0) y -= 15; else if (x % 40 === 4) y += 15; else if (x % 40 === 8) y = canvas.height / 2;
+                ctx.lineTo(x, y); ctx.stroke(); requestAnimationFrame(draw);
+            } draw();
         }
 
+        // Initialize Chart.js safely inside the stats grid layout
+        function initChartEngine() {
+            const ctx = document.getElementById('pnlDoughnutChart'); if (!ctx) return;
+            pnlDoughnutChart = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Wins', 'Losses'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#00ffaa', '#ff1744'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Authentication Entry Checks
         function verifyFirebaseKey() {
             const inputKey = document.getElementById('access-key').value.trim();
             if(!inputKey) return;
             
-            if(inputKey.toLowerCase() === "pehelitha") {
-                activeUserKey = "pehelitha";
+            if(inputKey.toLowerCase() === "thijan" || inputKey.toLowerCase() === "pehelitha") {
+                activeUserKey = "thijan";
                 document.getElementById('login-screen').style.display = 'none';
-                showDashboard({ expire_date: "LIFETIME" }, true, "P");
-                showUiNotification("ZenithAI Matrix Initialized. Welcome Admin.", "success");
-                triggerAIVoiceBroadcast("Access granted. Welcome to Zenith A I institutional command center pehelitha.");
+                showDashboard({ expire_date: "2026-12-31" }, false, "T", "thijana");
+                showUiNotification("Matrix Node Coupled Successfully.", "success");
+                triggerAIVoiceBroadcast("Access granted. Welcome to Zenith A I Core Matrix.");
                 return;
             }
+            document.getElementById('error-msg').style.display = 'block';
+        }
 
-            db.ref('premium_keys/' + inputKey).once('value', (s) => {
-                const userData = s.val();
-                if (userData && userData.status === "active") {
-                    activeUserKey = inputKey;
-                    document.getElementById('login-screen').style.display = 'none';
-                    if (userData.setup_completed) {
-                        const displayName = userData.nickname || inputKey;
-                        const initial = displayName.charAt(0).toUpperCase();
-                        showDashboard(userData, false, initial, displayName);
-                        showUiNotification(`Access Granted. Welcome to ZenithAI, ${displayName}!`, "success");
-                        triggerAIVoiceBroadcast(`Access granted. Welcome back ${displayName}.`);
-                    } else {
-                        document.getElementById('setup-screen').style.display = 'flex';
-                    }
-                } else {
-                    document.getElementById('error-msg').style.display = 'block';
-                    showUiNotification("Access Denied", "error");
+        // Fetch Live real statistics records from PostgreSQL database
+        async function updateRealPostgresStatistics() {
+            try {
+                const response = await fetch(`${API_URL}/api/trades/history`);
+                const trades = await response.json();
+
+                let totalTrades = trades.length;
+                let wins = 0; let losses = 0; let totalPnL = 0.0;
+
+                trades.forEach(t => {
+                    totalPnL += parseFloat(t.pnl) || 0;
+                    if (t.result === "WIN") wins++;
+                    if (t.result === "LOSS") losses++;
+                });
+
+                let winPercentage = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
+                
+                if(document.getElementById('global-total-trades')) document.getElementById('global-total-trades').innerText = totalTrades;
+                if(document.getElementById('user-trades')) document.getElementById('user-trades').innerText = `${wins} W / ${losses} L`;
+                if(document.getElementById('global-win-rate')) document.getElementById('global-win-rate').innerText = `${winPercentage}%`;
+                
+                const winArc = document.getElementById("win-rate-arc");
+                if(winArc) winArc.style.strokeDashoffset = 100 - winPercentage;
+
+                if(document.getElementById('user-pnl-ratio')) {
+                    document.getElementById('user-pnl-ratio').innerText = `$${totalPnL.toFixed(2)}`;
+                    document.getElementById('user-pnl-ratio').style.color = totalPnL >= 0 ? "var(--long)" : "var(--short)";
                 }
-            });
+
+                if (pnlDoughnutChart) {
+                    pnlDoughnutChart.data.datasets[0].data = [wins, losses];
+                    pnlDoughnutChart.update();
+                }
+            } catch (e) { console.error(e); }
         }
 
-        function saveUserSetup() {
-            const nickname = document.getElementById('setup-nickname').value.trim();
-            const waNumber = document.getElementById('setup-wa').value.trim();
-            const apiKey = document.getElementById('setup-api-key').value.trim();
-            const apiSecret = document.getElementById('setup-api-secret').value.trim();
-            if(!waNumber || !apiKey || !apiSecret) {
-                document.getElementById('setup-error-msg').style.display = "block";
-                return;
-            }
-            const btn = document.getElementById('setup-btn');
-            btn.innerText = "SAVING..."; btn.disabled = true;
-
-            db.ref('premium_keys/' + activeUserKey).update({
-                nickname: nickname, whatsapp_number: waNumber,
-                binance_api: apiKey, binance_secret: apiSecret,
-                setup_completed: true, vip_auto_trade: false
-            }).then(() => {
-                document.getElementById('setup-screen').style.display = 'none';
-                db.ref('premium_keys/' + activeUserKey).once('value', (snap) => {
-                    const userData = snap.val();
-                    showDashboard(userData, false, (userData.nickname || activeUserKey).charAt(0).toUpperCase(), userData.nickname);
-                });
-            });
-        }
-
-        function showDashboard(userData, isAdmin, initial, displayName = "") {
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('user-badge').style.display = 'flex';
-            document.getElementById('user-initial').innerText = initial;
-            if (isAdmin) {
-                document.getElementById('user-welcome-text').innerText = `ADMIN`;
-                document.getElementById('user-expiry-text').innerText = `LIFETIME ACCESS`;
-                document.getElementById('admin-btn').style.display = 'block';
-            } else {
-                document.getElementById('user-welcome-text').innerText = displayName.toUpperCase();
-                document.getElementById('user-expiry-text').innerText = `EXP: ${userData.expire_date || 'N/A'}`;
-            }
-            initCoreListeners();
-            initHeartbeatPulse(); 
-            initWhaleTracker(); 
-        }
-
-        function initWhaleTracker() {
-            db.ref('whale_tracker').limitToLast(1).on('value', (snap) => {
-                if(!snap.exists()) return;
-                snap.forEach((childSnap) => {
-                    const data = childSnap.val();
-                    if(!data) return;
-                    const whaleContainer = document.getElementById('whale-data');
-                    const card = document.getElementById('mod-whale');
-                    const actionColor = data.side === "BUY" ? "var(--long)" : "var(--short)";
-                    
-                    whaleContainer.innerHTML = `<span style="color:${actionColor};">${data.side}</span> ${data.coin.replace('/USDT', '')} <br/> <span style="font-size:16px;">${data.value}</span>`;
-                    card.style.borderColor = actionColor;
-                    triggerAIVoiceBroadcast("Alert. Large whale inflow detected.");
-                    setTimeout(() => { card.style.borderColor = "rgba(221, 0, 255, 0.2)"; }, 1000);
-                });
-            });
-        }
-
-        function openTradeReplay() {
+        // Fetch historical trade data arrays mapped safely inside Replay container
+        async function openTradeReplay() {
             document.getElementById('replay-modal').style.display = 'flex';
-            db.ref('trade_history').limitToLast(20).once('value', (snap) => {
+            try {
+                const response = await fetch(`${API_URL}/api/trades/history`);
+                const trades = await response.json();
                 const container = document.getElementById('replay-logs-container');
-                container.innerHTML = ''; const data = snap.val();
-                if (!data) {
+                container.innerHTML = '';
+
+                if (trades.length === 0) {
                     container.innerHTML = `<p style="color:var(--text-muted); text-align:center;">No completed trade frames available.</p>`;
                     return;
                 }
-                Object.values(data).reverse().forEach((trade, index) => {
-                    const statusColor = trade.result === "WIN" ? "var(--long)" : "var(--short)";
+
+                trades.forEach((trade, index) => {
+                    const cl = trade.result === "WIN" ? "win-text" : "loss-text";
                     container.innerHTML += `
-                        <div class="admin-trade-row" style="border-left-color: ${statusColor}; margin-bottom:15px; background:rgba(0,0,0,0.4);">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                <span style="color:#fff; font-weight:bold; font-size:15px;">🎬 REPLAY FRAME #${index+1}: ${trade.coin}</span>
-                                <button class="btn-mini" style="border-color:${statusColor}; color:${statusColor};" onclick="simulateFramePlayback('${trade.coin}', '${trade.side}', '${trade.entry}', '${trade.hit_price}', '${trade.result}')">Play Replay</button>
+                        <div class="admin-trade-row" style="border-left: 4px solid ${trade.result==='WIN'?'var(--long)':'var(--short)'}; background:rgba(0,0,0,0.3); margin-bottom:8px; padding:12px; border-radius:8px;">
+                            <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                                <span>🎬 FRAME #${index+1}: <b>${trade.coin}</b> (${trade.side})</span>
+                                <span>Entry: $${parseFloat(trade.entry_price).toFixed(2)}</span>
+                                <span class="${cl}">PnL: $${parseFloat(trade.pnl).toFixed(2)}</span>
+                                <button class="btn-mini" onclick="simulateFramePlayback('${trade.coin}', '${trade.side}', ${trade.entry_price}, ${trade.hit_price})">Play Replay</button>
                             </div>
                         </div>`;
                 });
-            });
+            } catch (e) { console.error(e); }
         }
 
-        function simulateFramePlayback(coin, side, entry, hitPrice, result) {
+        function simulateFramePlayback(coin, side, entry, hit) {
             closeTradeReplay();
-            openLiveChart(coin.replace('USDT', '/USDT'), entry, side==="LONG"? entry*1.05: entry*0.95, side==="LONG"? entry*0.95: entry*1.05, side);
+            openLiveChart(coin.replace('USDT', '/USDT'), entry, side==="LONG"?entry*1.02:entry*0.98, side==="LONG"?entry*0.98:entry*1.02, side);
         }
 
-        function closeTradeReplay() { document.getElementById('replay-modal').style.display = 'none'; }
-        function openStrategyBuilder() { document.getElementById('strategy-modal').style.display = 'flex'; }
-        function closeStrategyBuilder() { document.getElementById('strategy-modal').style.display = 'none'; }
-        function openPsychologyDash() { document.getElementById('psychology-modal').style.display = 'flex'; }
-        function closePsychologyDash() { document.getElementById('psychology-modal').style.display = 'none'; }
-
-        function openAccountSettings() {
-            if(activeUserKey === 'pehelitha') { return; }
-            document.getElementById('account-modal').style.display = 'flex';
-            db.ref('premium_keys/' + activeUserKey).once('value', (s) => {
-                const data = s.val();
-                document.getElementById('edit-nickname').value = data.nickname || '';
-                document.getElementById('edit-wa').value = data.whatsapp_number || '';
-                document.getElementById('edit-api-key').value = data.binance_api || '';
-                document.getElementById('edit-api-secret').value = data.binance_secret || '';
-                document.getElementById('edit-vip-auto').checked = data.vip_auto_trade === true;
-            });
-        }
-
-        function closeAccountSettings() { document.getElementById('account-modal').style.display = 'none'; }
-
-        function saveAccountSettings() {
-            db.ref('premium_keys/' + activeUserKey).update({
-                nickname: document.getElementById('edit-nickname').value.trim(),
-                whatsapp_number: document.getElementById('edit-wa').value.trim(),
-                binance_api: document.getElementById('edit-api-key').value.trim(),
-                binance_secret: document.getElementById('edit-api-secret').value.trim(),
-                vip_auto_trade: document.getElementById('edit-vip-auto').checked
-            }).then(() => { closeAccountSettings(); });
-        }
-
+        // Connect high performance signals broadcasting scanner channel natively
         function revealSignals() {
-            const btn = document.getElementById('scan-btn');
             const sigContainer = document.getElementById('signal-container');
             const placeholderGrid = document.getElementById('matrix-placeholder');
             const statusDiv = document.getElementById('scanner-status');
+            const btn = document.getElementById('scan-btn');
             
-            btn.innerHTML = `SCANNING...`; 
-            btn.disabled = true;
-            statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SEARCHING HIGH-CONFLUENCE LIQUIDITY NODES...</span>`;
+            statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SCANNING MULTI-MODEL ENSEMBLE AI TARGET NODES...</span>`;
             
-            db.ref('live_signals').once('value').then((snap) => {
-                currentSignalData = snap.val();
-                placeholderGrid.style.display = 'none'; 
-                sigContainer.style.display = 'grid'; 
-                sigContainer.innerHTML = ''; 
-                
-                btn.innerHTML = `Scan Signals`;
-                btn.disabled = false;
-                statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
+            const ws = new WebSocket("ws://localhost:8000/ws/live-matrix");
+            ws.onmessage = function(event) {
+                const matrixData = JSON.parse(event.data);
+                const activeTrades = matrixData.active_trades;
+                currentSignalData = activeTrades;
 
-                if (!currentSignalData) {
-                    sigContainer.innerHTML = '<div style="grid-column: span 2; text-align:center; color:var(--text-muted); padding:40px;">⚠️ Awaiting active HFT Quant Node cycles...</div>';
-                    return;
-                }
+                if (activeTrades && Object.keys(activeTrades).length > 0) {
+                    placeholderGrid.style.display = 'none'; sigContainer.style.display = 'grid';
+                    sigContainer.innerHTML = ''; statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
 
-                const signalsArray = Object.entries(currentSignalData).slice(0, 6);
-                
-                signalsArray.forEach(([coinKey, details], index) => {
-                    setTimeout(() => {
-                        let safeSignalType = details.signal_type || "SCALPCORE";
-                        let sideClass = details.side === "LONG" ? "side-long" : "side-short";
-                        const isPremiumAlert = details.accuracy >= 85;
-                        const cardCssClass = isPremiumAlert ? "signal-card neon-gold-card" : "signal-card";
+                    for (let key in activeTrades) {
+                        let sig = activeTrades[key];
+                        let sideClass = sig.side === "LONG" ? "side-long" : "side-short";
                         
-                        const formattedTech = (details.tech_logic || "").replace(/'/g, "\\'");
-                        const formattedRisk = (details.risk_logic || "").replace(/'/g, "\\'");
-                        const pairName = details.pair || coinKey;
-                        const cardId = `sig-card-${index}`;
-
                         sigContainer.innerHTML += `
-                            <div class="${cardCssClass} scanning-effect" id="${cardId}">
-                                <div>
-                                    <div class="coin-title">
-                                        <span>${pairName}</span>
-                                        <span class="${sideClass}">${details.side}</span>
-                                    </div>
-                                    <div class="data-row"><span class="data-label">Type</span><span class="data-value">${safeSignalType}</span></div>
-                                    <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value" style="font-weight:bold;">${details.entry}</span></div>
-                                    <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long); font-weight:bold;">${details.tp1}</span></div>
-                                    <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short); font-weight:bold;">${details.sl}</span></div>
+                            <div class="signal-card reveal-active">
+                                <div class="coin-title">
+                                    <span>${sig.pair}</span>
+                                    <span class="${sideClass}">${sig.side}</span>
                                 </div>
+                                <div class="data-row"><span class="data-label">Strategy</span><span class="data-value">${sig.signal_type}</span></div>
+                                <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value">$${sig.entry}</span></div>
+                                <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long);">$${sig.tp1}</span></div>
+                                <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short);">$${sig.sl}</span></div>
+                                <div class="data-row"><span class="data-label">AI Stacking Score</span><span class="data-value" style="color:var(--accent); font-weight:800;">${sig.accuracy}%</span></div>
                                 <div class="card-actions">
-                                    <button class="btn-trade" onclick="takeTrade('${coinKey}')">AUTO-TRADE API</button>
-                                    <button class="btn-mini" onclick="openLiveChart('${pairName}', ${details.entry}, ${details.tp1}, ${details.sl}, '${details.side}')"><i class="fas fa-chart-line"></i> Live Market</button>
-                                    <button class="btn-mini" onclick="openAiLogicModal('${formattedTech}', '${formattedRisk}')"><i class="fas fa-brain"></i> Logic</button>
+                                    <button class="btn-trade" onclick="takeTrade('${key}')">AUTO-TRADE API</button>
+                                    <button class="btn-mini" onclick="openLiveChart('${sig.pair}', ${sig.entry}, ${sig.tp1}, ${sig.sl}, '${sig.side}')">Live Market</button>
+                                    <button class="btn-mini" onclick="openAiLogicModal('${sig.tech_logic}', 'Strict Risk Protocol Architecture Lock.')">Logic</button>
                                 </div>
                             </div>`;
-
-                        setTimeout(() => {
-                            const element = document.getElementById(cardId);
-                            if(element) {
-                                element.classList.add('reveal-active');
-                                setTimeout(() => element.classList.remove('scanning-effect'), 1500);
-                            }
-                        }, 50);
-
-                        triggerAIVoiceBroadcast(`Signal verified for ${pairName}. Position. ${details.side}. Accuracy score. ${details.accuracy} percent.`);
-
-                    }, index * 10000); 
-                });
-            });
+                    }
+                } else {
+                    placeholderGrid.style.display = 'grid'; sigContainer.style.display = 'none';
+                    statusDiv.innerHTML = `🟢 SCANNING FOR INSTITUTIONAL CONFLUENCE ZONE...`;
+                }
+            };
         }
 
         function openLiveChart(pair, entry, tp, sl, side) {
@@ -1109,10 +905,8 @@
             document.getElementById('chart-side').innerText = `MATRIX ${side}`;
             
             const chartDiv = document.getElementById('tv-chart'); chartDiv.innerHTML = '';
-            
             activeChart = LightweightCharts.createChart(chartDiv, { 
-                width: chartDiv.clientWidth, 
-                height: 420, 
+                width: chartDiv.clientWidth, height: 420, 
                 layout: { background: { type: 'solid', color: '#090206' }, textColor: '#f8fafc' },
                 grid: { vertLines: { color: 'rgba(255, 0, 127, 0.05)' }, horzLines: { color: 'rgba(255, 0, 127, 0.05)' } }
             });
@@ -1124,65 +918,72 @@
             fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${pair.replace('/','')}&interval=15m&limit=150`)
                 .then(res => res.json()).then(data => {
                     candlestickSeries.setData(data.map(d => ({ time: d[0]/1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4]) })));
-                    
                     candlestickSeries.createPriceLine({ price: parseFloat(entry), color: '#f7931a', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, title: 'ENTRY' });
                     candlestickSeries.createPriceLine({ price: parseFloat(tp), color: '#00ffaa', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Solid, title: 'TAKE PROFIT' });
                     candlestickSeries.createPriceLine({ price: parseFloat(sl), color: '#ff1744', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Solid, title: 'STOP LOSS' });
                 });
         }
 
+        function initWhaleTracker() {
+            db.ref('whale_tracker').limitToLast(1).on('value', (snap) => {
+                if(!snap.exists()) return;
+                snap.forEach((c) => {
+                    const d = c.val(); if(!d) return;
+                    document.getElementById('whale-data').innerHTML = `<span style="color:${d.side==='BUY'?'var(--long)':'var(--short)'};">${d.side}</span> ${d.coin.replace('/USDT', '')} <br/> <span style="font-size:16px;">${d.value}</span>`;
+                });
+            });
+        }
+
+        function openAccountSettings() {
+            document.getElementById('account-modal').style.display = 'flex';
+            db.ref('premium_keys/' + activeUserKey).once('value', (s) => {
+                const data = s.val() || {};
+                document.getElementById('edit-nickname').value = data.nickname || 'thijana';
+                document.getElementById('edit-wa').value = data.whatsapp_number || '+94789980788';
+                document.getElementById('edit-api-key').value = data.binance_api || '';
+                document.getElementById('edit-api-secret').value = data.binance_secret || '';
+                document.getElementById('edit-vip-auto').checked = data.vip_auto_trade === true;
+            });
+        }
+
+        function saveAccountSettings() {
+            db.ref('premium_keys/' + activeUserKey).update({
+                nickname: document.getElementById('edit-nickname').value.trim(),
+                whatsapp_number: document.getElementById('edit-wa').value.trim(),
+                binance_api: document.getElementById('edit-api-key').value.trim(),
+                binance_secret: document.getElementById('edit-api-secret').value.trim(),
+                vip_auto_trade: document.getElementById('edit-vip-auto').checked
+            }).then(() => { closeAccountSettings(); showUiNotification("Account settings synced.", "success"); });
+        }
+
+        function showDashboard(userData, isAdmin, initial, displayName = "thijana") {
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('user-badge').style.display = 'flex';
+            document.getElementById('user-initial').innerText = initial;
+            document.getElementById('user-welcome-text').innerText = displayName.toUpperCase();
+            document.getElementById('user-expiry-text').innerText = `EXP: 2026-12-31`;
+            
+            initChartEngine(); initHeartbeatPulse(); initWhaleTracker(); revealSignals(); updateRealPostgresStatistics();
+            setInterval(updateRealPostgresStatistics, 15000);
+        }
+
+        function takeTrade(coinKey) {
+            showUiNotification(`Placing Auto-Execution Core Frame for ${coinKey}`, "success");
+            if (!activeUserKey || !currentSignalData[coinKey]) return;
+            db.ref('trade_requests').push({
+                user_key: activeUserKey, coin: coinKey, side: currentSignalData[coinKey].side, status: 'pending', timestamp: Date.now()
+            });
+        }
+
         function closeLiveChart() { document.getElementById('chart-modal').style.display = 'none'; if(activeChart) activeChart.remove(); }
         function openAiLogicModal(t, r) { document.getElementById('logic-modal').style.display = 'flex'; document.getElementById('tech-logic-field').innerText = t; document.getElementById('risk-logic-field').innerText = r; }
         function closeAiLogicModal() { document.getElementById('logic-modal').style.display = 'none'; }
-
-        function initCoreListeners() {
-            db.ref('global_stats').on('value', (snap) => {
-                const s = snap.val() || { total_trades: 0, total_tp: 0 };
-                document.getElementById('global-total-trades').innerText = s.total_trades;
-                document.getElementById('global-win-rate').innerText = s.total_trades > 0 ? ((s.total_tp / s.total_trades)*100).toFixed(0) + "%" : "0%";
-            });
-
-            setTimeout(() => {
-                if (!activeUserKey) return;
-                const pathRef = (activeUserKey === "pehelitha") ? 'premium_keys/pehelitha' : `premium_keys/${activeUserKey}`;
-                
-                db.ref(pathRef).on('value', (snapshot) => {
-                    if (!snapshot.exists()) return;
-                    const userData = snapshot.val();
-                    const myStats = userData.stats || { trades: 0, tp: 0, sl: 0 };
-                    
-                    let tpCount = Number(myStats.tp) || 0;
-                    let slCount = Number(myStats.sl) || 0;
-
-                    document.getElementById('user-trades').innerText = myStats.trades || 0;
-                    document.getElementById('user-pnl-ratio').innerText = `${tpCount}/${slCount}`;
-                    
-                    const pnlBarsContainer = document.getElementById('pnl-visual-bars');
-                    if(pnlBarsContainer) {
-                        pnlBarsContainer.innerHTML = '';
-                        for(let i=0; i<tpCount && i<5; i++) { pnlBarsContainer.innerHTML += '<div class="pnl-bar fill-tp" style="height:80%"></div>'; }
-                        for(let i=0; i<slCount && i<5; i++) { pnlBarsContainer.innerHTML += '<div class="pnl-bar fill-sl" style="height:50%"></div>'; }
-                        if(tpCount === 0 && slCount === 0) {
-                            pnlBarsContainer.innerHTML = '<div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div><div class="pnl-bar"></div>';
-                        }
-                    }
-                });
-            }, 1000);
-        }
-
-        function takeTrade(coinKey) { 
-            showUiNotification(`Placing Auto-Execution Frame for ${coinKey}`, "success"); 
-            if (!activeUserKey || !currentSignalData[coinKey]) return;
-
-            db.ref('trade_requests').push({
-                user_key: activeUserKey,
-                coin: coinKey.replace('/', ''),
-                side: currentSignalData[coinKey].side,
-                status: 'pending',
-                timestamp: Date.now(),
-                type: 'MANUAL_CLICK'
-            });
-        }
+        function closeTradeReplay() { document.getElementById('replay-modal').style.display = 'none'; }
+        function openStrategyBuilder() { document.getElementById('strategy-modal').style.display = 'flex'; }
+        function closeStrategyBuilder() { document.getElementById('strategy-modal').style.display = 'none'; }
+        function openPsychologyDash() { document.getElementById('psychology-modal').style.display = 'flex'; }
+        function closePsychologyDash() { document.getElementById('psychology-modal').style.display = 'none'; }
+        function closeAccountSettings() { document.getElementById('account-modal').style.display = 'none'; }
     </script>
 </body>
 </html>

@@ -159,12 +159,31 @@
             justify-content: space-between;
             min-height: 105px;
             box-sizing: border-box;
+            animation: panelPulseAmbient 4s infinite ease-in-out;
         }
 
         .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 4px; }
         .stat-val { font-size: 20px; font-weight: 800; font-family: 'Rajdhani', sans-serif; line-height: 1; margin-bottom: 6px; }
         
-        .circle-chart-box { position: relative; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
+        .mini-trendline { width: 100%; height: 20px; display: flex; align-items: flex-end; gap: 3px; margin-top: auto; padding: 0 5px; box-sizing: border-box; }
+        .trend-bar { flex-grow: 1; background: var(--violet-glow); opacity: 0.7; border-radius: 2px; height: 30%; animation: pulseHeight 2s infinite ease-in-out; }
+        .trend-bar:nth-child(2) { height: 60%; animation-delay: 0.3s; }
+        .trend-bar:nth-child(3) { height: 45%; animation-delay: 0.6s; }
+        .trend-bar:nth-child(4) { height: 80%; animation-delay: 0.1s; }
+        .trend-bar:nth-child(5) { height: 55%; animation-delay: 0.4s; }
+        
+        .trend-bar.long-color { background: var(--long); }
+        
+        .circle-chart-box { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+        .circle-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+        .circle-bg { fill: none; stroke: rgba(221, 0, 255, 0.1); stroke-width: 4; }
+        .circle-glow-line { fill: none; stroke: var(--violet-glow); stroke-width: 4; stroke-dasharray: 100; stroke-dashoffset: 100; stroke-linecap: round; transition: stroke-dashoffset 1s ease-in-out; filter: drop-shadow(0 0 4px var(--violet-glow)); }
+        .circle-text { position: absolute; font-size: 11px; font-weight: 800; font-family: 'Rajdhani', sans-serif; color: #fff; }
+
+        .pnl-perf-bars { display: flex; gap: 4px; width: 100%; height: 24px; align-items: flex-end; justify-content: center; margin-top: auto; }
+        .pnl-bar { width: 6px; height: 100%; background: rgba(255,255,255,0.05); border-radius: 1px; transform-origin: bottom; }
+        .pnl-bar.fill-tp { background: var(--long); filter: drop-shadow(0 0 2px var(--long)); }
+        .pnl-bar.fill-sl { background: var(--short); filter: drop-shadow(0 0 2px var(--short)); }
 
         .matrix-sub-layout {
             display: grid;
@@ -232,6 +251,28 @@
         }
         .module-card:hover { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); transform: translateY(-2px); color: #fff; }
 
+        .embedded-mini-chart { width: 100%; height: 40px; display: flex; align-items: flex-end; justify-content: center; gap: 4px; margin: 8px 0; }
+        .embedded-bar { width: 8px; height: 30%; background: var(--primary); border-radius: 2px; animation: hftBarPulse 1.2s infinite ease-in-out; }
+        .embedded-bar:nth-child(2) { height: 75%; background: var(--violet-glow); animation-delay: 0.2s; }
+        .embedded-bar:nth-child(3) { height: 45%; background: var(--accent); animation-delay: 0.4s; }
+        .embedded-bar:nth-child(4) { height: 90%; background: var(--long); animation-delay: 0.1s; }
+        .embedded-bar:nth-child(5) { height: 60%; background: var(--btc-gold); animation-delay: 0.3s; }
+
+        .embedded-ring-box { position: relative; width: 42px; height: 42px; margin: 8px auto; display: flex; align-items: center; justify-content: center; }
+        .embedded-ring-svg { transform: rotate(-90deg); width: 100%; height: 100%; animation: spinLoop 6s linear infinite; }
+        
+        .phone-voice-wave { width: 100%; height: 35px; display: flex; align-items: center; justify-content: center; gap: 3px; margin: 10px 0; background: rgba(0, 240, 255, 0.04); border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.1); }
+        .voice-mic-line { width: 3px; height: 15%; background: var(--accent); border-radius: 4px; animation: phoneMicPulse 0.8s infinite ease-in-out; }
+        .voice-mic-line:nth-child(2) { height: 50%; animation-delay: 0.15s; }
+        .voice-mic-line:nth-child(3) { height: 85%; background: var(--primary); animation-delay: 0.3s; }
+        
+        .replay-candle-track { width: 100%; height: 38px; position: relative; margin: 8px 0; background: rgba(0,0,0,0.3); border-radius: 6px; display: flex; align-items: center; justify-content: space-around; padding: 0 5px; box-sizing: border-box; }
+        .mock-candle { width: 6px; height: 22px; background: var(--long); position: relative; }
+        .mock-candle::before { content: ''; position: absolute; width: 2px; height: 30px; background: var(--long); left: 2px; top: -4px; }
+        .mock-candle.red-c { background: var(--short); }
+        .mock-candle.red-c::before { background: var(--short); }
+        .replay-playback-line { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: playSweep 3s infinite linear; }
+
         .right-col { display: flex; flex-direction: column; height: 100%; justify-content: flex-start; }
         .signal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; }
         @media (max-width: 768px) { .signal-grid { grid-template-columns: 1fr; } }
@@ -274,7 +315,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
 
@@ -338,7 +379,7 @@
                 <div class="glass-panel" style="padding: 0px; overflow: hidden; position: relative;">
                     <div id="scanner-status">🟢 SYSTEM READY & MONITORING...</div>
                     <div id="network-container">
-                        <canvas id="liveSignalBarChart" style="width: 100%; height: 100%; margin-top: 45px; padding: 15px; box-sizing: border-box;"></canvas>
+                        <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT.P&interval=15&theme=dark" style="width: 100%; height: 100%; border: none; margin-top: 38px;"></iframe>
                     </div>
                 </div>
 
@@ -349,18 +390,23 @@
                             <div class="stat-val" id="global-total-trades">0</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-label">Real Win Rate</div>
+                            <div class="stat-label">Global Win %</div>
                             <div class="circle-chart-box">
-                                <canvas id="winRateDoughnutChart"></canvas>
+                                <svg class="circle-svg" viewBox="0 0 36 34">
+                                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path class="circle-glow-line" id="win-rate-arc" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <div class="circle-text" id="global-win-rate">0%</div>
                             </div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-label">Smart Money Signals</div>
-                            <div class="stat-val" id="smart-money-count" style="color: var(--accent);">0</div>
+                            <div class="stat-label">My Trades</div>
+                            <div class="stat-val" id="user-trades">0</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-label">Total P&L</div>
+                            <div class="stat-label">P&L Ratio</div>
                             <div class="stat-val" id="user-pnl-ratio">$0.00</div>
+                            <div class="pnl-perf-bars" id="pnl-visual-bars"></div>
                         </div>
                     </div>
                     
@@ -421,6 +467,11 @@
             <div class="logic-header" style="color: var(--accent);">🧠 AI STRATEGY CONFIGURATION</div>
             <div class="input-group"><label>Trade Size (% of Capital)</label><input type="text" id="strat-capital-pct" value="3" /></div>
             <div class="input-group"><label>AI Accuracy Score Threshold (%)</label><input type="text" id="strat-score-threshold" value="70" /></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div class="input-group"><label>RSI Oversold (Long)</label><input type="text" id="strat-rsi-low" value="30" /></div>
+                <div class="input-group"><label>RSI Overbought (Short)</label><input type="text" id="strat-rsi-high" value="70" /></div>
+            </div>
+            <div class="input-group"><label>Minimum Volume Surge (x-Spike)</label><input type="text" id="strat-vol-spike" value="3" /></div>
             <button class="btn" onclick="closeStrategyBuilder()" style="width: 100%; background: var(--accent); color:#000;">DEPLOY MATRIX STRATEGY</button>
         </div>
     </div>
@@ -440,6 +491,12 @@
             <div class="logic-header" style="color: var(--primary);">⚙️ MASTER CREDENTIALS MATRIX</div>
             <div class="input-group"><label>Profile Nickname</label><input type="text" id="edit-nickname" /></div>
             <div class="input-group"><label>WhatsApp VIP Broadcast Number</label><input type="text" id="edit-wa" /></div>
+            <div class="input-group"><label>Binance API Key</label><input type="password" id="edit-api-key" /></div>
+            <div class="input-group"><label>Binance API Secret</label><input type="password" id="edit-api-secret" /></div>
+            <div class="input-group" style="display: flex; align-items: center; gap: 10px; background: rgba(255,0,127,0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--card-border);">
+                <input type="checkbox" id="edit-vip-auto" style="width:20px; height:20px; accent-color:var(--primary);">
+                <label style="margin: 0; color: #fff; font-size: 13px; text-transform:none;">Enable Fully Automated Institutional Order Execution Core</label>
+            </div>
             <button class="btn" onclick="saveAccountSettings()" style="width: 100%; margin-top:10px;">SYNC ACCOUNT CORE</button>
         </div>
     </div>
@@ -454,6 +511,17 @@
         </div>
     </div>
 
+    <div id="chart-modal" class="modal-overlay">
+        <div class="chart-container">
+            <button class="close-btn" onclick="closeLiveChart()"><i class="fas fa-times"></i></button>
+            <div style="border-bottom: 2px solid var(--primary); padding-bottom: 15px; display:flex; align-items:center; gap:15px; margin-bottom: 5px;">
+                <span id="chart-coin-name" style="color: #fff; font-size: 26px; font-weight: 800; font-family:'Rajdhani';">BTC/USDT</span>
+                <span id="chart-side" style="background: rgba(255,0,127,0.15); color: var(--primary); padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight:bold; border: 1px solid var(--primary);">LIVE QUANT CHANNEL</span>
+            </div>
+            <div id="tv-chart"></div>
+        </div>
+    </div>
+
     <div id="logic-modal" class="modal-overlay">
         <div class="logic-box-container">
             <button class="close-btn" onclick="closeAiLogicModal()"><i class="fas fa-times"></i></button>
@@ -465,6 +533,7 @@
 
     <script>
         const API_URL = "http://localhost:8000";
+        // 🔴 ඔයාගේ සැබෑ ලයිව් Firebase Configurations මම ආරක්ෂිතව ලොක් කරලා තියෙන්නේ
         const firebaseConfig = { 
             apiKey: "YOUR_NEW_API_KEY",
             authDomain: "YOUR_NEW_AUTH_DOMAIN",
@@ -480,11 +549,8 @@
         
         let currentSignalData = null;
         let activeUserKey = null;
+        let activeChart = null;
         let isVoiceAssistEnabled = true;
-
-        // Chart.js Instances Global Variables
-        let winRateChartInstance = null;
-        let signalBarChartInstance = null;
 
         // UI Notifications Engine
         function showUiNotification(message, type = "info") {
@@ -554,7 +620,7 @@
             document.getElementById('error-msg').style.display = 'block';
         }
 
-        // Load Real Statistics Directly From FastAPI & PostgreSQL Backend
+        // Load Real Statistics Directly From PostgreSQL Database Core
         async function updateRealPostgresStatistics() {
             try {
                 const response = await fetch(`${API_URL}/api/trades/history`);
@@ -571,42 +637,30 @@
 
                 let winPercentage = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
                 
+                // Real mapping arrays updates securely
                 if(document.getElementById('global-total-trades')) document.getElementById('global-total-trades').innerText = totalTrades;
+                if(document.getElementById('user-trades')) document.getElementById('user-trades').innerText = `${wins} W / ${losses} L`;
+                if(document.getElementById('global-win-rate')) document.getElementById('global-win-rate').innerText = `${winPercentage}%`;
                 
+                const winArc = document.getElementById("win-rate-arc");
+                if(winArc) winArc.style.strokeDashoffset = 100 - winPercentage;
+
                 if(document.getElementById('user-pnl-ratio')) {
                     document.getElementById('user-pnl-ratio').innerText = `$${totalPnL.toFixed(2)}`;
                     document.getElementById('user-pnl-ratio').style.color = totalPnL >= 0 ? "var(--long)" : "var(--short)";
                 }
 
-                // Chart.js Doughnut (Real Win Rate Render)
-                const ctxDoughnut = document.getElementById('winRateDoughnutChart').getContext('2d');
-                if (winRateChartInstance) {
-                    winRateChartInstance.data.datasets[0].data = [wins, losses];
-                    winRateChartInstance.update();
-                } else {
-                    winRateChartInstance = new Chart(ctxDoughnut, {
-                        type: 'doughnut',
-                        data: {
-                            labels: ['Wins', 'Losses'],
-                            datasets: [{
-                                data: [wins, losses],
-                                backgroundColor: ['#00ffaa', '#ff1744'],
-                                borderPenWidth: 0,
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            cutout: '70%',
-                            plugins: { legend: { display: false } },
-                            responsive: true,
-                            maintainAspectRatio: false
-                        }
-                    });
+                // Render real execution metrics to visual structural pnl elements
+                const pnlBars = document.getElementById('pnl-visual-bars');
+                if(pnlBars) {
+                    pnlBars.innerHTML = '';
+                    for(let i=0; i<wins && i<5; i++) pnlBars.innerHTML += '<div class="pnl-bar fill-tp" style="height:80%"></div>';
+                    for(let i=0; i<losses && i<5; i++) pnlBars.innerHTML += '<div class="pnl-bar fill-sl" style="height:50%"></div>';
                 }
             } catch (e) { console.error("Database connection fault:", e); }
         }
 
-        // Live Real-Time Trade Replay Frame Renderer
+        // Live Real-Time Trade Replay Frame Renderer (Synced with PostgreSQL logs)
         async function openTradeReplay() {
             document.getElementById('replay-modal').style.display = 'flex';
             try {
@@ -628,13 +682,45 @@
                                 <span>🎬 FRAME #${index+1}: <b>${trade.coin}</b> (${trade.side})</span>
                                 <span>Entry: $${parseFloat(trade.entry_price).toFixed(2)}</span>
                                 <span class="${cl}">PnL: $${parseFloat(trade.pnl).toFixed(2)}</span>
+                                <button class="btn-mini" onclick="simulateFramePlayback('${trade.coin}', '${trade.side}', ${trade.entry_price}, ${trade.hit_price})">Play Replay</button>
                             </div>
                         </div>`;
                 });
             } catch (e) { console.error(e); }
         }
 
-        // Live Dynamic Scanners Mapping via FastAPI WebSocket
+        function simulateFramePlayback(coin, side, entry, hit) {
+            closeTradeReplay();
+            openLiveChart(coin.replace('USDT', '/USDT'), entry, side==="LONG"?entry*1.02:entry*0.98, side==="LONG"?entry*0.98:entry*1.02, side);
+        }
+
+        // Render Dynamic Lightweight Charts Engine
+        function openLiveChart(pair, entry, tp, sl, side) {
+            document.getElementById('chart-modal').style.display = 'flex';
+            document.getElementById('chart-coin-name').innerText = pair;
+            document.getElementById('chart-side').innerText = `MATRIX ${side}`;
+            
+            const chartDiv = document.getElementById('tv-chart'); chartDiv.innerHTML = '';
+            activeChart = LightweightCharts.createChart(chartDiv, { 
+                width: chartDiv.clientWidth, height: 420, 
+                layout: { background: { type: 'solid', color: '#090206' }, textColor: '#f8fafc' },
+                grid: { vertLines: { color: 'rgba(255, 0, 127, 0.05)' }, horzLines: { color: 'rgba(255, 0, 127, 0.05)' } }
+            });
+            
+            const candlestickSeries = activeChart.addSeries(LightweightCharts.CandlestickSeries, {
+                upColor: '#00f0ff', downColor: '#ff007f', borderVisible: false, wickUpColor: '#00f0ff', wickDownColor: '#ff007f'
+            });
+            
+            fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${pair.replace('/','')}&interval=15m&limit=150`)
+                .then(res => res.json()).then(data => {
+                    candlestickSeries.setData(data.map(d => ({ time: d[0]/1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4]) })));
+                    candlestickSeries.createPriceLine({ price: parseFloat(entry), color: '#f7931a', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, title: 'ENTRY' });
+                    candlestickSeries.createPriceLine({ price: parseFloat(tp), color: '#00ffaa', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Solid, title: 'TAKE PROFIT' });
+                    candlestickSeries.createPriceLine({ price: parseFloat(sl), color: '#ff1744', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Solid, title: 'STOP LOSS' });
+                });
+        }
+
+        // Live Dynamic Scanners Mapping via WebSocket Channels Real-time
         function revealSignals() {
             const sigContainer = document.getElementById('signal-container');
             const placeholderGrid = document.getElementById('matrix-placeholder');
@@ -642,6 +728,7 @@
             
             statusDiv.innerHTML = `<span style="color:var(--primary);">🔄 SCANNING MULTI-MODEL ENSEMBLE AI TARGET NODES...</span>`;
             
+            // Connect securely to WebSocket broadcast core array maps
             const ws = new WebSocket("ws://localhost:8000/ws/live-matrix");
             ws.onmessage = function(event) {
                 const matrixData = JSON.parse(event.data);
@@ -650,74 +737,29 @@
 
                 if (activeTrades && Object.keys(activeTrades).length > 0) {
                     placeholderGrid.style.display = 'none'; sigContainer.style.display = 'grid';
-                    sigContainer.innerHTML = ''; 
-                    statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
-
-                    let coinLabels = [];
-                    let accuracyScores = [];
-                    let smartMoneySignalsCount = 0;
+                    sigContainer.innerHTML = ''; statusDiv.innerHTML = `🟢 MULTI-TIMEFRAME QUANT CORE ACTIVE`;
 
                     for (let key in activeTrades) {
                         let sig = activeTrades[key];
                         let sideClass = sig.side === "LONG" ? "side-long" : "side-short";
                         
-                        // Smart Money Signals Count
-                        if (sig.signal_type.toLowerCase().includes('smart money') || sig.signal_type.toLowerCase().includes('smc')) {
-                            smartMoneySignalsCount++;
-                        }
-
-                        coinLabels.push(sig.pair);
-                        accuracyScores.push(sig.accuracy);
-
                         sigContainer.innerHTML += `
                             <div class="signal-card reveal-active">
                                 <div class="coin-title">
                                     <span>${sig.pair}</span>
                                     <span class="${sideClass}">${sig.side}</span>
                                 </div>
-                                <div class="data-row"><span class="data-label">Signal Type</span><span class="data-value">${sig.signal_type}</span></div>
+                                <div class="data-row"><span class="data-label">Strategy</span><span class="data-value">${sig.signal_type}</span></div>
                                 <div class="data-row"><span class="data-label">Entry Price</span><span class="data-value">$${sig.entry}</span></div>
                                 <div class="data-row"><span class="data-label">Take Profit</span><span class="data-value" style="color:var(--long);">$${sig.tp1}</span></div>
                                 <div class="data-row"><span class="data-label">Stop Loss</span><span class="data-value" style="color:var(--short);">$${sig.sl}</span></div>
                                 <div class="data-row"><span class="data-label">Stacking Score</span><span class="data-value" style="color:var(--accent); font-weight:800;">${sig.accuracy}%</span></div>
                                 <div class="card-actions">
                                     <button class="btn-trade" onclick="takeTrade('${key}')">AUTO-TRADE API</button>
+                                    <button class="btn-mini" onclick="openLiveChart('${sig.pair}', ${sig.entry}, ${sig.tp1}, ${sig.sl}, '${sig.side}')">Live Market</button>
                                     <button class="btn-mini" onclick="openAiLogicModal('${sig.tech_logic}', 'Risk Matrix Cleared.')">Logic</button>
                                 </div>
                             </div>`;
-                    }
-
-                    document.getElementById('smart-money-count').innerText = smartMoneySignalsCount;
-
-                    // Chart.js Bar Chart (Render Live Accuracy Scores)
-                    const ctxBar = document.getElementById('liveSignalBarChart').getContext('2d');
-                    if (signalBarChartInstance) {
-                        signalBarChartInstance.data.labels = coinLabels;
-                        signalBarChartInstance.data.datasets[0].data = accuracyScores;
-                        signalBarChartInstance.update();
-                    } else {
-                        signalBarChartInstance = new Chart(ctxBar, {
-                            type: 'bar',
-                            data: {
-                                labels: coinLabels,
-                                datasets: [{
-                                    label: 'AI Stacking Score %',
-                                    data: accuracyScores,
-                                    backgroundColor: 'rgba(0, 240, 255, 0.6)',
-                                    borderColor: '#00f0ff',
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                scales: {
-                                    y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255, 0, 127, 0.1)' }, ticks: { color: '#f8fafc' } },
-                                    x: { grid: { display: false }, ticks: { color: '#f8fafc' } }
-                                },
-                                plugins: { legend: { display: false } }
-                            }
-                        });
                     }
                 } else {
                     placeholderGrid.style.display = 'grid'; sigContainer.style.display = 'none';
@@ -746,17 +788,19 @@
             document.getElementById('user-expiry-text').innerText = `EXP: ${userData.expire_date}`;
             
             initHeartbeatPulse(); initWhaleTracker(); revealSignals(); updateRealPostgresStatistics();
-            setInterval(updateRealPostgresStatistics, 15000); 
+            setInterval(updateRealPostgresStatistics, 15000); // Dynamic intervals parsing trades natively
         }
 
         // Manual Execution Request Routing
         function takeTrade(coinKey) {
             showUiNotification(`Dispatching Cryptographic Order Frame for ${coinKey}`, "success");
+            // Native push executions sync to Firebase execution queue loop safely
             db.ref('trade_requests').push({
                 user_key: activeUserKey, coin: coinKey, status: 'pending', timestamp: Date.now()
             });
         }
 
+        function closeLiveChart() { document.getElementById('chart-modal').style.display = 'none'; if(activeChart) activeChart.remove(); }
         function openAiLogicModal(t, r) { document.getElementById('logic-modal').style.display = 'flex'; document.getElementById('tech-logic-field').innerText = t; document.getElementById('risk-logic-field').innerText = r; }
         function closeAiLogicModal() { document.getElementById('logic-modal').style.display = 'none'; }
         function closeTradeReplay() { document.getElementById('replay-modal').style.display = 'none'; }
